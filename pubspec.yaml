@@ -1,0 +1,48 @@
+name: shop_app
+description: "A new Flutter project."
+
+publish_to: 'none' 
+
+version: 1.0.0
+
+environment:
+  sdk: ^3.6.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+  cloud_firestore: ^5.4.0
+  cloud_functions: ^5.3.0
+  firebase_auth: ^5.4.0
+  fl_chart: ^0.70.2
+  intl: ^0.20.1
+  firebase_core: ^3.10.1
+  
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  flutter_launcher_icons: ^0.14.3
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/logo.png"
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/icons/logo.png 
+  fonts:
+    - family: times new roman 
+      fonts: 
+        - asset: assets/fonts/times new roman.ttf
+        - asset: assets/fonts/times new roman italic.ttf
+        - asset: assets/fonts/times new roman bold.ttf
+          weight: 700
+        - asset: assets/fonts/times new roman bold italic.ttf
+
+    
