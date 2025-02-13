@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../screens/admin/admin_dashboard.dart';
-import 'staff/staff_products_sale.dart';
+import '../components/input_field.dart';
+import '../firestore/login_fetch_information.dart';
+import '../utils/password_strong.dart';
 import '../utils/loading_display.dart';
 import '../utils/show_dialog.dart';
 import '../utils/text.dart';
@@ -21,206 +22,221 @@ class LoginPageState extends State<LoginPage> {
   final passwordCtrl = TextEditingController();
 
   bool isLoading = false;
-  bool isPasswordVisible = false;
+  final passwordChecker = PasswordStrengthChecker();
+  LoginFetchInformation? fetchInformation;
 
-  void login() async {
-    final email = emailCtrl.text.trim();
-    final password = passwordCtrl.text.trim();
+  @override
+  void initState() {
+    super.initState();
+    fetchInformation = LoginFetchInformation(
+      firestore: FirebaseFirestore.instance,
+      setState: setState,
+      isMounted: () => mounted,
+      navigateTo: (widget) {
+        Navigator.pushReplacement(
+            context, MaterialPageRoute(builder: (context) => widget));
+      },
+      showDialogMessage: (title, message) {
+        showCustomDialog(context, title, message);
+      },
+    );
 
-    if (email.isEmpty || password.isEmpty) {
-      if (mounted) {
-        showCustomDialog(
-            context, 'Error', 'Please enter both email and password.');
-      }
-      return;
-    }
-
-    setState(() => isLoading = true);
-
-    try {
-      UserCredential? adminCredential;
-      try {
-        adminCredential = await auth.signInWithEmailAndPassword(
-            email: email, password: password);
-      } catch (_) {
-        adminCredential = null;
-      }
-
-      if (adminCredential != null) {
-        if (mounted) {
-          Navigator.pushReplacement(context,
-              MaterialPageRoute(builder: (context) => const AdminDashboard()));
-        }
-        return;
-      }
-
-      final adminQuery = await firestore
-          .collection('admin')
-          .where('email', isEqualTo: email)
-          .limit(1)
-          .get();
-      if (adminQuery.docs.isNotEmpty &&
-          adminQuery.docs.first['password'] == password) {
-        if (mounted) {
-          Navigator.pushReplacement(context,
-              MaterialPageRoute(builder: (context) => const AdminDashboard()));
-        }
-        return;
-      }
-
-      final userQuery = await firestore
-          .collection('users')
-          .where('email', isEqualTo: email)
-          .limit(1)
-          .get();
-      if (userQuery.docs.isNotEmpty &&
-          userQuery.docs.first['password'] == password) {
-        await userQuery.docs.first.reference
-            .update({'lastSignedIn': FieldValue.serverTimestamp()});
-        if (mounted) {
-          Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => const StaffProductsSale()));
-        }
-        return;
-      }
-
-      throw FirebaseAuthException(
-          code: 'invalid-credentials', message: 'Invalid email or password.');
-    } on FirebaseAuthException catch (e) {
-      if (mounted) {
-        showCustomDialog(
-            context,
-            'Login Failed',
-            e.code == 'invalid-credentials'
-                ? 'Invalid email or password.'
-                : e.message ?? 'An unknown error occurred.');
-      }
-    } finally {
-      if (mounted) {
-        setState(() => isLoading = false);
-      }
-    }
+    fetchInformation!.login(emailCtrl, passwordCtrl);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.blueAccent, Colors.indigo],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Colors.blue.shade800, Colors.blue.shade400],
           ),
-          Positioned(
-            top: -100,
-            left: -100,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withAlpha(25),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: -150,
-            right: -100,
-            child: Container(
-              width: 350,
-              height: 350,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withAlpha(25),
-              ),
-            ),
-          ),
-          // Login Form
-          Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              flex: 1,
+              child: Stack(
                 children: [
-                  const Icon(Icons.lock_person, size: 100, color: Colors.white),
-                  const SizedBox(height: 20),
-                  Text("Welcome Back",
-                      style: style(
-                        32,
-                        color: Colors.white,
-                      )),
-                  const SizedBox(height: 8),
-                  Text("Sign in to continue",
-                      style: style(18, color: Colors.white70)),
-                  const SizedBox(height: 40),
-                  buildTextField(emailCtrl, "Email", Icons.email),
-                  const SizedBox(height: 20),
-                  buildTextField(passwordCtrl, "Password", Icons.lock,
-                      isPassword: true),
-                  const SizedBox(height: 30),
-                  isLoading
-                      ? buildLoadingOverlay()
-                      : ElevatedButton(
-                          onPressed: login,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30)),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 50, vertical: 16),
-                            elevation: 5,
+                  Positioned(
+                    top: -50,
+                    left: -50,
+                    child: Container(
+                      width: 200,
+                      height: 200,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withAlpha(25),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 150,
+                    left: -100,
+                    child: Container(
+                      width: 200,
+                      height: 200,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withAlpha(25),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: -50,
+                    right: -50,
+                    child: Container(
+                      width: 200,
+                      height: 200,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withAlpha(25),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 150,
+                    right: -100,
+                    child: Container(
+                      width: 200,
+                      height: 200,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withAlpha(25),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(40),
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Adventure starts here",
+                            style: style(
+                              32,
+                              color: Colors.white,
+                            ),
                           ),
-                          child: Text("Sign In",
-                              style: style(
-                                20,
-                                color: Colors.blue,
-                              )),
-                        ),
+                          const SizedBox(height: 16),
+                          Text(
+                            "Create an account to join our community and explore the world of possibilities.",
+                            style: style(18, color: Colors.white70),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget buildTextField(
-      TextEditingController controller, String hint, IconData icon,
-      {bool isPassword = false}) {
-    return TextFormField(
-      controller: controller,
-      decoration: InputDecoration(
-        filled: true,
-        fillColor: Colors.white.withAlpha(229),
-        hintText: hint,
-        hintStyle: style(16, color: Colors.black54),
-        prefixIcon: Icon(icon, color: Colors.black54),
-        suffixIcon: isPassword
-            ? IconButton(
-                icon: Icon(
-                    isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                    color: Colors.black54),
-                onPressed: () =>
-                    setState(() => isPasswordVisible = !isPasswordVisible),
-              )
-            : null,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: BorderSide.none,
+            Expanded(
+              flex: 1,
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(40),
+                    bottomLeft: Radius.circular(40),
+                  ),
+                ),
+                child: Center(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 40),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.lock_person,
+                            size: 100, color: Colors.blue),
+                        const SizedBox(height: 20),
+                        Text(
+                          "Hello! Welcome back",
+                          style: style(
+                            24,
+                            color: Colors.black,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          "Login to your account to continue",
+                          style: style(16, color: Colors.grey),
+                        ),
+                        const SizedBox(height: 40),
+                        InputField(
+                          controller: emailCtrl,
+                          label: "Email",
+                          icon: Icons.email,
+                        ),
+                        const SizedBox(height: 20),
+                        InputField(
+                          controller: passwordCtrl,
+                          label: "Password",
+                          icon: Icons.lock,
+                          obscure: true,
+                        ),
+                        const SizedBox(height: 20),
+                        isLoading
+                            ? buildLoadingOverlay()
+                            : ElevatedButton(
+                                onPressed: () => fetchInformation!
+                                    .login(emailCtrl, passwordCtrl),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue.shade800,
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(30)),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 50, vertical: 16),
+                                ),
+                                child: Text(
+                                  "Login",
+                                  style: style(
+                                    20,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                        const SizedBox(height: 20),
+                        Text(
+                          "Or login with",
+                          style: style(14, color: Colors.grey),
+                        ),
+                        const SizedBox(height: 20),
+                        const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.g_mobiledata,
+                                size: 40, color: Colors.red),
+                            SizedBox(width: 20),
+                            Icon(Icons.facebook, size: 40, color: Colors.blue),
+                            SizedBox(width: 20),
+                            Icon(Icons.apple, size: 40, color: Colors.black),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        TextButton(
+                          onPressed: () {},
+                          child: Text(
+                            "Don't have an account? Create Account",
+                            style: style(
+                              14,
+                              color: Colors.blue.shade800,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       ),
-      obscureText: isPassword && !isPasswordVisible,
-      style: style(16, color: Colors.black),
     );
   }
 }
