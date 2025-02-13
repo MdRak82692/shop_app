@@ -5,7 +5,6 @@ import '../components/input_field.dart';
 import '../firestore/login_fetch_information.dart';
 import '../utils/password_strong.dart';
 import '../utils/loading_display.dart';
-import '../utils/show_dialog.dart';
 import '../utils/text.dart';
 
 class LoginPage extends StatefulWidget {
@@ -36,12 +35,7 @@ class LoginPageState extends State<LoginPage> {
         Navigator.pushReplacement(
             context, MaterialPageRoute(builder: (context) => widget));
       },
-      showDialogMessage: (title, message) {
-        showCustomDialog(context, title, message);
-      },
     );
-
-    fetchInformation!.login(emailCtrl, passwordCtrl);
   }
 
   @override
@@ -184,7 +178,7 @@ class LoginPageState extends State<LoginPage> {
                             ? buildLoadingOverlay()
                             : ElevatedButton(
                                 onPressed: () => fetchInformation!
-                                    .login(emailCtrl, passwordCtrl),
+                                    .login(context, emailCtrl, passwordCtrl),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.blue.shade800,
                                   shape: RoundedRectangleBorder(

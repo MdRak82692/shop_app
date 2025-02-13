@@ -4,20 +4,19 @@ import 'package:flutter/material.dart';
 import '../screens/admin/admin_dashboard.dart';
 import '../screens/staff/staff_products_sale.dart';
 import '../utils/password_strong.dart';
+import '../utils/show_dialog.dart';
 
 class LoginFetchInformation {
   final FirebaseFirestore firestore;
   final Function(void Function()) setState;
   final bool Function() isMounted;
   final void Function(Widget) navigateTo;
-  final void Function(String, String) showDialogMessage;
 
   LoginFetchInformation({
     required this.firestore,
     required this.setState,
     required this.isMounted,
     required this.navigateTo,
-    required this.showDialogMessage,
   });
 
   final auth = FirebaseAuth.instance;
@@ -26,14 +25,15 @@ class LoginFetchInformation {
   bool isLoading = false;
   final passwordChecker = PasswordStrengthChecker();
 
-  void login(TextEditingController emailCtrl,
+  void login(BuildContext context, TextEditingController emailCtrl,
       TextEditingController passwordCtrl) async {
     final email = emailCtrl.text.trim();
     final password = passwordCtrl.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
       if (isMounted()) {
-        showDialogMessage('Error', 'Please enter both email and password.');
+        showCustomDialog(
+            context, 'Error', 'Please enter both email and password.');
       }
       return;
     }
@@ -95,12 +95,15 @@ class LoginFetchInformation {
       );
     } on FirebaseAuthException catch (e) {
       if (isMounted()) {
-        showDialogMessage(
-          'Login Failed',
-          e.code == 'invalid-credentials'
-              ? 'Invalid email or password.'
-              : e.message ?? 'An unknown error occurred.',
-        );
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          showCustomDialog(
+            context,
+            'Login Failed',
+            e.code == 'invalid-credentials'
+                ? 'Invalid email or password.'
+                : e.message ?? 'An unknown error occurred.',
+          );
+        });
       }
     } finally {
       if (isMounted()) {
