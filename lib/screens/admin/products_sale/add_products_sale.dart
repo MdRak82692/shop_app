@@ -1,7 +1,7 @@
 import 'package:shop_app/fetch_information/quantity_fetch_information.dart';
 import '../../../components/product_autocomplete.dart';
 import '../../../fetch_information/add_item_list.dart';
-import '../../../fetch_information/fetch_information.dart';
+import '../../../fetch_information/product_name_fetch_information.dart';
 import '../../../utils/text.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -21,7 +21,7 @@ class AddProductsSale extends StatefulWidget {
 
 class AddProductsSaleState extends State<AddProductsSale> {
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
-  FetchInformation? fetchInformation;
+  ProductNameFetchInformation? fetchInformation;
   QuantityFetchInformation? quantityFetchInformation;
   final quantityCtrl = TextEditingController();
   final pricePerProductCtrl = TextEditingController();
@@ -50,7 +50,7 @@ class AddProductsSaleState extends State<AddProductsSale> {
   void initState() {
     super.initState();
     fetchInformation =
-        FetchInformation(firestore: firestore, setState: setState);
+        ProductNameFetchInformation(firestore: firestore, setState: setState);
     fetchInformation!.fetchProductName();
 
     quantityFetchInformation =

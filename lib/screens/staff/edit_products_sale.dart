@@ -1,5 +1,4 @@
 import '../../../fetch_information/add_item_list.dart';
-import '../../../fetch_information/fetch_information.dart';
 import '../../../fetch_information/quantity_fetch_information.dart';
 import '../../../firestore/update_information.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +7,7 @@ import '../../../components/add_edit_title_section.dart';
 import '../../../components/button.dart';
 import '../../../components/input_field.dart';
 import '../../../utils/text.dart';
+import '../../fetch_information/product_name_fetch_information.dart';
 import 'staff_products_sale.dart';
 import '../../../components/product_autocomplete.dart';
 
@@ -24,7 +24,7 @@ class EditProductsSale extends StatefulWidget {
 
 class EditProductsSaleState extends State<EditProductsSale> {
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
-  FetchInformation? fetchInformation;
+  ProductNameFetchInformation? fetchInformation;
   QuantityFetchInformation? quantityFetchInformation;
   final quantityCtrl = TextEditingController();
   final pricePerProductCtrl = TextEditingController();
@@ -54,7 +54,7 @@ class EditProductsSaleState extends State<EditProductsSale> {
     super.initState();
 
     fetchInformation =
-        FetchInformation(firestore: firestore, setState: setState);
+        ProductNameFetchInformation(firestore: firestore, setState: setState);
     fetchInformation!.fetchProductName().then((_) {});
 
     totalPrice = widget.orderData['sale'] ?? 0.0;

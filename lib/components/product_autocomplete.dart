@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../fetch_information/fetch_information.dart';
 import '../../../utils/text.dart';
+import '../fetch_information/product_name_fetch_information.dart';
 
 class ProductAutocomplete extends StatefulWidget {
-  final FetchInformation fetchInformation;
+  final ProductNameFetchInformation fetchInformation;
   final Function(String) onSelected;
   final TextEditingController textEditingController;
   final FocusNode focusNode;

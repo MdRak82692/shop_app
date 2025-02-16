@@ -1,17 +1,19 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-class FetchInformation {
+class ProductNameFetchInformation {
   final FirebaseFirestore firestore;
   Function(void Function()) setState;
 
-  FetchInformation({required this.firestore, required this.setState});
+  ProductNameFetchInformation(
+      {required this.firestore, required this.setState});
   final productPriceCtrl = TextEditingController();
   final totalPriceCtrl = TextEditingController();
   final pricePerProductCtrl = TextEditingController();
   final quantityCtrl = TextEditingController();
 
-  FetchInformation? fetchInformation;
+  ProductNameFetchInformation? fetchInformation;
+
   double totalPrice = 0.0;
   double discount = 0.0;
   double pricePerProduct = 0.0;
@@ -22,9 +24,6 @@ class FetchInformation {
   String? selectedStaff;
 
   List<String> productName = [];
-  List<Map<String, dynamic>> staffList = [];
-  List<String> excludedStaffNames = [];
-  List<Map<String, String>> excludedStaffNamesAndPositions = [];
   Map<String, double> priceMap = {};
   List<Map<String, dynamic>> items = [];
 
@@ -48,12 +47,6 @@ class FetchInformation {
       productName = querySnapshot.docs
           .map((doc) => doc['productName'] as String)
           .where((name) {
-        List<String>? priceTypes = productPriceTypes[name];
-        if (priceTypes != null &&
-            priceTypes.contains('Selling Price') &&
-            priceTypes.contains('Buying Price')) {
-          return false;
-        }
         return true;
       }).toList()
         ..sort((a, b) => a.compareTo(b));
@@ -78,30 +71,59 @@ class FetchInformation {
     }
   }
 
-  Future<void> fetchStaffData() async {
-    try {
-      final salarySnapshot =
-          await firestore.collection('staffsalaryinformation').get();
+  Future<void> fetchPurchaseProductName() async {
+    QuerySnapshot querySnapshot =
+        await firestore.collection('productList').get();
 
-      excludedStaffNamesAndPositions = salarySnapshot.docs
-          .map((doc) => {
-                'name': doc['staffName'] as String,
-              })
-          .toList();
+    setState(() {
+      productName = querySnapshot.docs
+          .map((doc) => doc['productName'] as String)
+          .toList()
+        ..sort((a, b) => a.compareTo(b));
+    });
+  }
 
-      final staffSnapshot = await firestore.collection('staff').get();
+  Future<void> fetchProductPrice(String productName) async {
+    QuerySnapshot querySnapshot = await firestore
+        .collection('productPrice')
+        .where('priceType', isEqualTo: 'Buying Price')
+        .where('productName', isEqualTo: productName)
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      double fetchedPrice =
+          (querySnapshot.docs.first['productPrice'] as num).toDouble();
 
       setState(() {
-        staffList = staffSnapshot.docs
-            .map((doc) => {
-                  'name': "${doc['staffName']}",
-                })
-            .where((staff) {
-          return !excludedStaffNamesAndPositions
-              .any((excludedStaff) => excludedStaff['name'] == staff['name']);
-        }).toList();
+        if (pricePerProductCtrl.text.isEmpty ||
+            pricePerProduct == priceMap[productName]) {
+          pricePerProductCtrl.text = fetchedPrice.toString();
+          pricePerProduct = fetchedPrice;
+        }
+
+        priceMap[productName] = fetchedPrice;
       });
-    } finally {}
+
+      updatePrice();
+    }
+  }
+
+  Future<void> fetchSalePrice(String productName) async {
+    QuerySnapshot querySnapshot = await firestore
+        .collection('productPrice')
+        .where('priceType', isEqualTo: 'Selling Price')
+        .where('productName', isEqualTo: productName)
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      var price = querySnapshot.docs.first['productPrice'];
+      setState(() {
+        priceMap[productName] = (price as num).toDouble();
+        pricePerProductCtrl.text = price.toString();
+      });
+
+      updatePrice();
+    }
   }
 
   void updatePrice() {

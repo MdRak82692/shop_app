@@ -1,6 +1,6 @@
 import '../../../components/product_autocomplete.dart';
 import '../../../fetch_information/add_item_list.dart';
-import '../../../fetch_information/fetch_information.dart';
+import '../../../fetch_information/product_name_fetch_information.dart';
 import '../../../firestore/update_information.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -24,7 +24,7 @@ class EditPurchaseProducts extends StatefulWidget {
 
 class EditPurchaseProductsState extends State<EditPurchaseProducts> {
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
-  FetchInformation? fetchInformation;
+  ProductNameFetchInformation? fetchInformation;
   final quantityCtrl = TextEditingController();
   final pricePerProductCtrl = TextEditingController();
   final productPriceCtrl = TextEditingController();
@@ -50,7 +50,7 @@ class EditPurchaseProductsState extends State<EditPurchaseProducts> {
     super.initState();
 
     fetchInformation =
-        FetchInformation(firestore: firestore, setState: setState);
+        ProductNameFetchInformation(firestore: firestore, setState: setState);
 
     totalPrice = widget.orderData['cost'] ?? 0.0;
     totalPriceCtrl.text = totalPrice.toStringAsFixed(2);

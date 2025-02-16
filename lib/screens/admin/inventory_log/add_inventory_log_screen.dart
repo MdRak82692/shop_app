@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../components/drop_down_button.dart';
-import '../../../fetch_information/fetch_information.dart';
+import '../../../fetch_information/product_name_fetch_information.dart';
 import '../../../fetch_information/quantity_fetch_information.dart';
 import '../../../utils/slider_bar.dart';
 import '../../../components/add_edit_title_section.dart';
@@ -42,13 +42,13 @@ class AddInventoryLogScreenState extends State<AddInventoryLogScreen> {
   ];
 
   String? selectedLogType;
-  FetchInformation? fetchInformation;
+  ProductNameFetchInformation? fetchInformation;
   bool isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    fetchInformation = FetchInformation(
+    fetchInformation = ProductNameFetchInformation(
       firestore: firestore,
       setState: setState,
     );

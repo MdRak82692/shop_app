@@ -1,6 +1,6 @@
 import '../../../components/product_autocomplete.dart';
 import '../../../fetch_information/add_item_list.dart';
-import '../../../fetch_information/fetch_information.dart';
+import '../../../fetch_information/product_name_fetch_information.dart';
 import '../../../utils/text.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -20,7 +20,7 @@ class AddPurchaseProducts extends StatefulWidget {
 
 class AddPurchaseProductsState extends State<AddPurchaseProducts> {
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
-  FetchInformation? fetchInformation;
+  ProductNameFetchInformation? fetchInformation;
 
   final quantityCtrl = TextEditingController();
   final pricePerProductCtrl = TextEditingController();
@@ -46,7 +46,7 @@ class AddPurchaseProductsState extends State<AddPurchaseProducts> {
   void initState() {
     super.initState();
     fetchInformation =
-        FetchInformation(firestore: firestore, setState: setState);
+        ProductNameFetchInformation(firestore: firestore, setState: setState);
     fetchInformation!.fetchProductName().then((_) {});
   }
 

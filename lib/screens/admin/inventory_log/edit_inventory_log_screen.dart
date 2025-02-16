@@ -32,7 +32,7 @@ class EditInventoryLogScreenState extends State<EditInventoryLogScreen> {
   final quantityCtrl = TextEditingController();
   final productNameCtrl = TextEditingController();
 
-  double availableQuantity = 0.0;
+  double finalavailableQuantity = 0.0;
   double quantity = 1.0;
   String stockStatus = '';
   bool isQuantityValid = true;
@@ -58,7 +58,7 @@ class EditInventoryLogScreenState extends State<EditInventoryLogScreen> {
         FetchInformation(firestore: firestore, setState: setState);
 
     Map<String, dynamic> controllers = {
-      'quantity': quantityCtrl..text = widget.userData['quantity'].toString(),
+      'quantity': quantityCtrl,
       'productName': productNameCtrl
     };
 
@@ -86,11 +86,12 @@ class EditInventoryLogScreenState extends State<EditInventoryLogScreen> {
   }
 
   void fetchAvailableQuantity(String productName) async {
-    double availableQty =
-        await quantityFetchInformation!.fetchAvailableQuantity(productName);
-
+    Map<String, double> availableQuantities =
+        await quantityFetchInformation!.fetchAvailableQuantities();
+    double availableQuantity = availableQuantities[productName] ?? 0.0;
+    double enteredQuantity = double.tryParse(quantityCtrl.text) ?? 0.0;
     setState(() {
-      availableQuantity = availableQty;
+      finalavailableQuantity = availableQuantity + enteredQuantity;
     });
   }
 
@@ -135,10 +136,10 @@ class EditInventoryLogScreenState extends State<EditInventoryLogScreen> {
                           onChanged: (value) {
                             setState(() {
                               quantity = double.tryParse(value) ?? 1.0;
-                              if (quantity > availableQuantity) {
+                              if (quantity > finalavailableQuantity) {
                                 stockStatus = 'Over Stock';
                                 isQuantityValid = false;
-                              } else if (availableQuantity <= 0) {
+                              } else if (finalavailableQuantity <= 0) {
                                 stockStatus = 'Out of Stock';
                                 isQuantityValid = false;
                               } else {
