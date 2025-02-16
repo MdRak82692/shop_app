@@ -71,16 +71,12 @@ class PurchaseProductsState extends State<PurchaseProducts> {
                           },
                           fieldName: 'time',
                           itemNames: const [
-                            'Category',
-                            'Sub Category',
                             'Product Name',
                             'Quantity',
                             'Price Per Product',
                             'Product Price',
                           ],
                           itemFieldMapping: const {
-                            'Category': 'category',
-                            'Sub Category': 'subCategory',
                             'Product Name': 'productName',
                             'Quantity': 'quantity',
                             'Price Per Product': 'pricePerProduct',

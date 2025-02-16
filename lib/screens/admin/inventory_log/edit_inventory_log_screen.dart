@@ -4,10 +4,12 @@ import '../../../components/add_edit_title_section.dart';
 import '../../../components/button.dart';
 import '../../../components/drop_down_button.dart';
 import '../../../components/input_field.dart';
-import '../../../firestore/fetch_information.dart';
+import '../../../fetch_information/fetch_information.dart';
 import '../../../firestore/load_informaion.dart';
+import '../../../fetch_information/quantity_fetch_information.dart';
 import '../../../firestore/update_information.dart';
 import '../../../utils/slider_bar.dart';
+import '../../../utils/text.dart';
 import 'inventory_log_management_screen.dart';
 
 class EditInventoryLogScreen extends StatefulWidget {
@@ -23,10 +25,17 @@ class EditInventoryLogScreen extends StatefulWidget {
 
 class EditInventoryLogScreenState extends State<EditInventoryLogScreen> {
   final firestore = FirebaseFirestore.instance;
+
+  QuantityFetchInformation? quantityFetchInformation;
+  FetchInformation? fetchInformation;
+
   final quantityCtrl = TextEditingController();
-  final categoryCtrl = TextEditingController();
-  final subCategoryCtrl = TextEditingController();
   final productNameCtrl = TextEditingController();
+
+  double availableQuantity = 0.0;
+  double quantity = 1.0;
+  String stockStatus = '';
+  bool isQuantityValid = true;
 
   List<String> logType = [
     'Loss',
@@ -39,17 +48,18 @@ class EditInventoryLogScreenState extends State<EditInventoryLogScreen> {
   ];
 
   String? selectedLogType;
-  FetchInformation? fetchInformation;
   bool isLoading = false;
 
   @override
   void initState() {
     super.initState();
+
+    fetchInformation =
+        FetchInformation(firestore: firestore, setState: setState);
+
     Map<String, dynamic> controllers = {
-      'quantity': quantityCtrl,
-      'category': categoryCtrl,
-      'productName': productNameCtrl,
-      'subCategory': subCategoryCtrl,
+      'quantity': quantityCtrl..text = widget.userData['quantity'].toString(),
+      'productName': productNameCtrl
     };
 
     selectedLogType = widget.userData['logType'];
@@ -64,12 +74,24 @@ class EditInventoryLogScreenState extends State<EditInventoryLogScreen> {
       collectionName: 'inventoryLog',
       fieldsToSubmit: [
         'quantity',
-        'category',
         'productName',
         'logType',
-        'subCategory'
       ],
     );
+
+    quantityFetchInformation =
+        QuantityFetchInformation(firestore: firestore, setState: setState);
+
+    fetchAvailableQuantity(widget.userData['productName']);
+  }
+
+  void fetchAvailableQuantity(String productName) async {
+    double availableQty =
+        await quantityFetchInformation!.fetchAvailableQuantity(productName);
+
+    setState(() {
+      availableQuantity = availableQty;
+    });
   }
 
   @override
@@ -93,27 +115,49 @@ class EditInventoryLogScreenState extends State<EditInventoryLogScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const AddEditTitleSection(
-                            title: 'Update Product Price Detail'),
+                        AddEditTitleSection(
+                          title: 'Update Inventory Log Detail',
+                          targetWidget: () =>
+                              const InventoryLogManagementScreen(),
+                        ),
                         const SizedBox(height: 40),
                         InputField(
-                          controller: categoryCtrl,
-                          label: 'Category',
-                          icon: Icons.category,
-                          readOnly: true,
-                        ),
-                        InputField(
-                          controller: subCategoryCtrl,
-                          label: 'Sub Category',
-                          icon: Icons.layers,
-                          readOnly: true,
-                        ),
-                        InputField(
-                          controller: productNameCtrl,
-                          label: 'Product Name',
+                          controller: productNameCtrl
+                            ..text = widget.userData['productName'],
+                          label: "Product Name",
                           icon: Icons.label,
                           readOnly: true,
                         ),
+                        InputField(
+                          controller: quantityCtrl,
+                          label: "Quantity",
+                          icon: Icons.archive,
+                          onChanged: (value) {
+                            setState(() {
+                              quantity = double.tryParse(value) ?? 1.0;
+                              if (quantity > availableQuantity) {
+                                stockStatus = 'Over Stock';
+                                isQuantityValid = false;
+                              } else if (availableQuantity <= 0) {
+                                stockStatus = 'Out of Stock';
+                                isQuantityValid = false;
+                              } else {
+                                stockStatus = '';
+                                isQuantityValid = true;
+                              }
+                            });
+                          },
+                        ),
+                        Center(
+                          child: Text(
+                            stockStatus,
+                            style: style(
+                              16,
+                              color: Colors.red,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 5),
                         DropDownButton(
                           label: 'Log Type',
                           items: logType,
@@ -125,40 +169,36 @@ class EditInventoryLogScreenState extends State<EditInventoryLogScreen> {
                           },
                           icon: Icons.article,
                         ),
-                        InputField(
-                            controller: quantityCtrl,
-                            label: "Qunatity",
-                            icon: Icons.archive),
                         const SizedBox(height: 20),
                         CustomButton(
-                          onPressed: () async {
-                            await updateInformation(
-                              userId: widget.userId,
-                              context: context,
-                              targetWidget:
-                                  const InventoryLogManagementScreen(),
-                              controllers: {
-                                'quantity':
-                                    double.tryParse(quantityCtrl.text) ?? 0.0,
-                                'category': categoryCtrl,
-                                'productName': productNameCtrl,
-                                'logType': selectedLogType,
-                                'subCategory': subCategoryCtrl
-                              },
-                              firestore: firestore,
-                              isLoading: isLoading,
-                              setState: setState,
-                              collectionName: 'inventoryLog',
-                              fieldsToSubmit: [
-                                'quantity',
-                                'category',
-                                'productName',
-                                'logType',
-                                'subCategory'
-                              ],
-                              addTimestamp: false,
-                            );
-                          },
+                          onPressed: isQuantityValid
+                              ? () async {
+                                  await updateInformation(
+                                    userId: widget.userId,
+                                    context: context,
+                                    targetWidget:
+                                        const InventoryLogManagementScreen(),
+                                    controllers: {
+                                      'logType': selectedLogType,
+                                      'productName':
+                                          widget.userData['productName'],
+                                      'quantity':
+                                          double.tryParse(quantityCtrl.text) ??
+                                              0.0,
+                                    },
+                                    firestore: firestore,
+                                    isLoading: isLoading,
+                                    setState: setState,
+                                    collectionName: 'inventoryLog',
+                                    fieldsToSubmit: [
+                                      'quantity',
+                                      'productName',
+                                      'logType',
+                                    ],
+                                    addTimestamp: true,
+                                  );
+                                }
+                              : null,
                           isLoading: isLoading,
                         )
                       ],

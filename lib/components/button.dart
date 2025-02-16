@@ -3,7 +3,7 @@ import '../utils/loading_display.dart';
 import '../utils/text.dart';
 
 class CustomButton extends StatelessWidget {
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final bool isLoading;
 
   const CustomButton({

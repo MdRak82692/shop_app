@@ -4,6 +4,7 @@ import '../function/delete_functions.dart';
 import '../utils/date_time_format.dart';
 import '../utils/loading_display.dart';
 import '../utils/text.dart';
+import '../utils/pdf_generator.dart';
 
 class DynamicDataTable1 extends StatefulWidget {
   final Widget Function(String userId, Map<String, dynamic> userData)
@@ -173,11 +174,8 @@ class DynamicDataTableState extends State<DynamicDataTable1> {
                           ),
                         ],
                       ),
-                      child: widget.fieldName == 'category'
-                          ? Text('Category: $date',
-                              style: style(20, color: Colors.blue.shade800))
-                          : Text('Date: $date',
-                              style: style(20, color: Colors.blue.shade800)),
+                      child: Text('Date: $date',
+                          style: style(20, color: Colors.blue.shade800)),
                     ),
                   ),
                 ),
@@ -256,7 +254,7 @@ class DynamicDataTableState extends State<DynamicDataTable1> {
       ...widget.columnNames
     ];
 
-    return newColumnNames.map((name) {
+    List<DataColumn> columns = newColumnNames.map((name) {
       return DataColumn(
         label: Text(name, style: style(16, color: Colors.black)),
         onSort: (columnIndex, ascending) {
@@ -266,12 +264,15 @@ class DynamicDataTableState extends State<DynamicDataTable1> {
           });
         },
       );
-    }).toList()
-      ..add(
-        DataColumn(
-          label: Text('Actions', style: style(16, color: Colors.black)),
-        ),
-      );
+    }).toList();
+
+    columns.add(
+      DataColumn(
+        label: Text('Actions', style: style(16, color: Colors.black)),
+      ),
+    );
+
+    return columns;
   }
 
   List<DataRow> buildDataRows(
@@ -292,9 +293,12 @@ class DynamicDataTableState extends State<DynamicDataTable1> {
     return rows;
   }
 
-  DataRow createDataRow(Map<String, dynamic> record, dynamic item,
-      List<Map<String, dynamic>> records,
-      {required bool isFirstRow}) {
+  DataRow createDataRow(
+    Map<String, dynamic> record,
+    dynamic item,
+    List<Map<String, dynamic>> records, {
+    required bool isFirstRow,
+  }) {
     List<DataCell> cells = [];
 
     if (isFirstRow) {
@@ -307,7 +311,6 @@ class DynamicDataTableState extends State<DynamicDataTable1> {
     for (var itemName in widget.itemNames) {
       var itemValue =
           item != null ? (item[widget.itemFieldMapping[itemName]] ?? '') : '';
-
       cells.add(DataCell(
           Text(itemValue.toString(), style: style(16, color: Colors.black))));
     }
@@ -323,8 +326,31 @@ class DynamicDataTableState extends State<DynamicDataTable1> {
           value = value.toString();
         }
 
-        cells.add(DataCell(
-            Text(value.toString(), style: style(16, color: Colors.black))));
+        if (col == 'Discount') {
+          double? numericValue = double.tryParse(value.toString());
+
+          if (numericValue != null) {
+            value = numericValue.toStringAsFixed(2);
+          } else {
+            value = '0.00';
+          }
+        }
+
+        if (col == "Print") {
+          cells.add(
+            DataCell(
+              IconButton(
+                icon: const Icon(Icons.print, color: Colors.green),
+                onPressed: () {
+                  printSalesPDF(record);
+                },
+              ),
+            ),
+          );
+        } else {
+          cells.add(DataCell(
+              Text(value.toString(), style: style(16, color: Colors.black))));
+        }
       }
     } else {
       for (var i = 0; i < widget.columnNames.length; i++) {
@@ -332,10 +358,8 @@ class DynamicDataTableState extends State<DynamicDataTable1> {
       }
     }
 
-    if (widget.editDelete != true) {
-      cells.add(const DataCell(Text('')));
-    } else {
-      if (isFirstRow) {
+    if (isFirstRow) {
+      if (widget.editDelete == true) {
         cells.add(
           DataCell(
             Row(
@@ -370,14 +394,17 @@ class DynamicDataTableState extends State<DynamicDataTable1> {
       } else {
         cells.add(const DataCell(Text('')));
       }
+    } else {
+      cells.add(const DataCell(Text('')));
     }
+
     return DataRow(
       color: WidgetStateProperty.resolveWith<Color>(
         (Set<WidgetState> states) {
           if (states.contains(WidgetState.hovered)) {
             return Colors.blue.shade50;
           }
-          return records.indexOf(record) % 10 == 0
+          return records.indexOf(record) % 2 == 0
               ? Colors.grey.shade100
               : Colors.white;
         },

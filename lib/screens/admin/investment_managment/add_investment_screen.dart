@@ -42,8 +42,11 @@ class AddInvestmentScreenState extends State<AddInvestmentScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const AddEditTitleSection(
-                            title: 'Add Investment Information'),
+                        AddEditTitleSection(
+                          title: 'Add Investment Information',
+                          targetWidget: () =>
+                              const InvestmentManagementScreen(),
+                        ),
                         const SizedBox(height: 40),
                         InputField(
                             controller: nameCtrl,

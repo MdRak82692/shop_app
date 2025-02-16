@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../firestore/quantity_fetch_information.dart';
+import '../fetch_information/quantity_fetch_information.dart';
 import '../utils/date_time_format.dart';
 import '../utils/loading_display.dart';
 import '../utils/text.dart';
@@ -10,7 +10,7 @@ class DynamicDataTable extends StatefulWidget {
   final String collectionName;
   final List<String> columnNames;
   final Map<String, dynamic> columnFieldMapping;
-  final List<String> groupByFields;
+
   final dynamic staffAttendance;
 
   const DynamicDataTable({
@@ -19,7 +19,6 @@ class DynamicDataTable extends StatefulWidget {
     required this.collectionName,
     required this.columnNames,
     required this.columnFieldMapping,
-    required this.groupByFields,
     this.staffAttendance,
   });
 
@@ -97,163 +96,57 @@ class DynamicDataTableState extends State<DynamicDataTable> {
               });
             }).toList();
 
-            var groupedRecords =
-                groupRecordsByFields(records, widget.groupByFields);
+            if (sortColumnIndex != null) {
+              records.sort((a, b) {
+                var fieldA = widget
+                    .columnFieldMapping[widget.columnNames[sortColumnIndex!]];
+                var valueA = a[fieldA];
+                var fieldB = widget
+                    .columnFieldMapping[widget.columnNames[sortColumnIndex!]];
+                var valueB = b[fieldB];
 
-            return Column(
-              children:
-                  buildNestedDataTables(groupedRecords, availableQuantities),
-            );
+                return sortAscending
+                    ? valueA.toString().compareTo(valueB.toString())
+                    : valueB.toString().compareTo(valueA.toString());
+              });
+            }
+
+            return buildDataTables(records, availableQuantities);
           },
         );
       },
     );
   }
 
-  Map<String, dynamic> groupRecordsByFields(
-      List<Map<String, dynamic>> records, List<String> fields) {
-    if (fields.isEmpty) {
-      return {'': records};
-    }
-
-    String currentField = fields.first;
-    Map<String, dynamic> groupedRecords = {};
-
-    for (var record in records) {
-      var fieldValue = record[currentField]?.toString() ?? '';
-
-      if (!groupedRecords.containsKey(fieldValue)) {
-        groupedRecords[fieldValue] = <Map<String, dynamic>>[];
-      }
-      (groupedRecords[fieldValue] as List<Map<String, dynamic>>).add(record);
-    }
-
-    if (fields.length > 1) {
-      var remainingFields = fields.sublist(1);
-      groupedRecords.forEach((key, value) {
-        groupedRecords[key] = groupRecordsByFields(
-            value as List<Map<String, dynamic>>, remainingFields);
-      });
-    }
-
-    return groupedRecords;
-  }
-
-  List<Widget> buildNestedDataTables(Map<String, dynamic> groupedRecords,
-      Map<String, double> availableQuantities,
-      {String parentKey = ''}) {
-    List<Widget> widgets = [];
-
-    groupedRecords.forEach((key, value) {
-      if (value is Map<String, dynamic>) {
-        widgets.add(
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 12.0, horizontal: 16.0),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 14.0, horizontal: 50.0),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
-                        borderRadius: BorderRadius.circular(8.0),
-                        border: Border.all(
-                          color: Colors.blue.shade200,
-                          width: 1.0,
-                        ),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Colors.black26,
-                            blurRadius: 4.0,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Text(
-                        key == 'subCategory'
-                            ? 'Sub-Category: $key'
-                            : 'Category: $key',
-                        style: style(
-                          20,
-                          color: Colors.blue.shade800,
-                        ),
-                      ),
-                    )),
-              ),
-              ...buildNestedDataTables(value, availableQuantities,
-                  parentKey: key),
-            ],
+  Align buildDataTables(List<Map<String, dynamic>> records,
+      Map<String, double> availableQuantities) {
+    return Align(
+      alignment: Alignment.center,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Card(
+            elevation: 8,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: DataTable(
+              headingRowColor: WidgetStateProperty.all(Colors.blue.shade100),
+              horizontalMargin: 20,
+              headingRowHeight: 50,
+              sortColumnIndex: sortColumnIndex,
+              sortAscending: sortAscending,
+              columns: buildDataColumns(),
+              rows: records
+                  .map((record) =>
+                      buildDataRow(record, records, availableQuantities))
+                  .toList(),
+            ),
           ),
-        );
-      } else if (value is List<Map<String, dynamic>>) {
-        widgets.add(
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 12.0, horizontal: 16.0),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 14.0, horizontal: 50.0),
-                      decoration: BoxDecoration(
-                        color: Colors.green.shade50,
-                        borderRadius: BorderRadius.circular(8.0),
-                        border: Border.all(
-                          color: Colors.green.shade200,
-                          width: 1.0,
-                        ),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Colors.black26,
-                            blurRadius: 4.0,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Text(
-                        key == 'category'
-                            ? 'Category: $key'
-                            : 'Sub-Category: $key',
-                        style: style(
-                          20,
-                          color: Colors.green.shade800,
-                        ),
-                      ),
-                    )),
-              ),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: DataTable(
-                    headingRowColor:
-                        WidgetStateProperty.all(Colors.blue.shade100),
-                    horizontalMargin: 20,
-                    headingRowHeight: 50,
-                    sortColumnIndex: sortColumnIndex,
-                    sortAscending: sortAscending,
-                    columns: buildDataColumns(),
-                    rows: value
-                        .map((record) => buildDataRow(
-                            record, value, availableQuantities, parentKey))
-                        .toList(),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      }
-    });
-
-    return widgets;
+        ),
+      ),
+    );
   }
 
   List<DataColumn> buildDataColumns() {
@@ -277,8 +170,7 @@ class DynamicDataTableState extends State<DynamicDataTable> {
   DataRow buildDataRow(
       Map<String, dynamic> record,
       List<Map<String, dynamic>> records,
-      Map<String, double> availableQuantities,
-      String parentKey) {
+      Map<String, double> availableQuantities) {
     return DataRow(
         color: WidgetStateProperty.resolveWith<Color>(
           (Set<WidgetState> states) {

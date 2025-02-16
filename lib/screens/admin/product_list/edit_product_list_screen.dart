@@ -22,17 +22,12 @@ class EditProductListScreen extends StatefulWidget {
 class EditProductListScreenState extends State<EditProductListScreen> {
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
   final productNameCtrl = TextEditingController();
-  final subCategoryCtrl = TextEditingController();
-  final categoryCtrl = TextEditingController();
-
   bool isLoading = false;
 
   @override
   void initState() {
     super.initState();
     Map<String, TextEditingController> controllers = {
-      'subCategory': subCategoryCtrl,
-      'category': categoryCtrl,
       'productName': productNameCtrl,
     };
 
@@ -44,7 +39,7 @@ class EditProductListScreenState extends State<EditProductListScreen> {
       isLoading: true,
       setState: setState,
       collectionName: 'productList',
-      fieldsToSubmit: ['productName', 'category', 'subCategory'],
+      fieldsToSubmit: ['productName'],
     );
   }
 
@@ -69,21 +64,11 @@ class EditProductListScreenState extends State<EditProductListScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const AddEditTitleSection(
-                            title: 'Update Product Detail'),
+                        AddEditTitleSection(
+                            title: 'Update Product Detail',
+                            targetWidget: () =>
+                                const ProductListManagementScreen()),
                         const SizedBox(height: 40),
-                        InputField(
-                          controller: categoryCtrl,
-                          label: 'Category',
-                          icon: Icons.category,
-                          readOnly: true,
-                        ),
-                        InputField(
-                          controller: subCategoryCtrl,
-                          label: "Sub-Category Name",
-                          icon: Icons.layers,
-                          readOnly: true,
-                        ),
                         InputField(
                             controller: productNameCtrl,
                             label: "Product Name",
@@ -96,9 +81,7 @@ class EditProductListScreenState extends State<EditProductListScreen> {
                               context: context,
                               targetWidget: const ProductListManagementScreen(),
                               controllers: {
-                                'subCategory': subCategoryCtrl.text,
                                 'productName': productNameCtrl.text,
-                                'category': categoryCtrl.text,
                               },
                               firestore: firestore,
                               isLoading: isLoading,
@@ -106,8 +89,6 @@ class EditProductListScreenState extends State<EditProductListScreen> {
                               collectionName: 'productList',
                               fieldsToSubmit: [
                                 'productName',
-                                'category',
-                                'subCategory'
                               ],
                               name: 'productName',
                               option: 'productName',

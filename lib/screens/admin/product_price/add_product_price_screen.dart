@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../components/drop_down_button.dart';
-import '../../../firestore/fetch_information.dart';
+import '../../../fetch_information/fetch_information.dart';
 import '../../../utils/slider_bar.dart';
 import '../../../components/add_edit_title_section.dart';
 import '../../../components/button.dart';
@@ -34,7 +34,7 @@ class AddProductPriceScreenState extends State<AddProductPriceScreen> {
       firestore: firestore,
       setState: setState,
     );
-    fetchInformation!.fetchCategories().then((_) {});
+    fetchInformation!.fetchProductName().then((_) {});
   }
 
   @override
@@ -58,65 +58,32 @@ class AddProductPriceScreenState extends State<AddProductPriceScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const AddEditTitleSection(
-                            title: 'Add Product Price Detail'),
+                        AddEditTitleSection(
+                          title: 'Add Product Price Detail',
+                          targetWidget: () =>
+                              const ProductPriceManagementScreen(),
+                        ),
                         const SizedBox(height: 40),
                         DropDownButton(
-                          label: 'Category',
-                          items: fetchInformation!.categories,
-                          selectedItem: fetchInformation!.selectedCategory,
-                          icon: Icons.category,
+                          label: 'Product Name',
+                          items: fetchInformation!.productName,
+                          selectedItem: fetchInformation!.selectedProductName,
+                          icon: Icons.label,
                           onChanged: (newValue) async {
                             setState(() {
-                              fetchInformation!.selectedCategory = newValue;
-                              fetchInformation!.selectedSubCategory = null;
-                              fetchInformation!.subCategories = [];
+                              fetchInformation!.selectedProductName = newValue;
                             });
 
-                            await fetchInformation!.fetchSubCategory(newValue!);
+                            List<String> availablePriceTypes =
+                                await fetchInformation!
+                                    .getAvailablePriceTypes(newValue!);
+                            setState(() {
+                              selectedPriceType = null;
+                              availablePriceTypesForSelectedProduct =
+                                  availablePriceTypes;
+                            });
                           },
                         ),
-                        if (fetchInformation!.selectedCategory != null)
-                          DropDownButton(
-                            label: 'Sub Category',
-                            items: fetchInformation!.subCategories,
-                            selectedItem: fetchInformation!.selectedSubCategory,
-                            icon: Icons.layers,
-                            onChanged: (newValue) {
-                              setState(() {
-                                fetchInformation!.selectedSubCategory =
-                                    newValue;
-                                fetchInformation!.selectedProductName = null;
-                                fetchInformation!.productName = [];
-                              });
-                              fetchInformation!.fetchProductName(
-                                fetchInformation!.selectedCategory!,
-                                newValue!,
-                              );
-                            },
-                          ),
-                        if (fetchInformation!.selectedSubCategory != null)
-                          DropDownButton(
-                            label: 'Product Name',
-                            items: fetchInformation!.productName,
-                            selectedItem: fetchInformation!.selectedProductName,
-                            icon: Icons.label,
-                            onChanged: (newValue) async {
-                              setState(() {
-                                fetchInformation!.selectedProductName =
-                                    newValue;
-                              });
-
-                              List<String> availablePriceTypes =
-                                  await fetchInformation!
-                                      .getAvailablePriceTypes(newValue!);
-                              setState(() {
-                                selectedPriceType = null;
-                                availablePriceTypesForSelectedProduct =
-                                    availablePriceTypes;
-                              });
-                            },
-                          ),
                         if (fetchInformation!.selectedProductName != null)
                           DropDownButton(
                             label: 'Price Type',
@@ -146,9 +113,6 @@ class AddProductPriceScreenState extends State<AddProductPriceScreen> {
                                     fetchInformation!.selectedProductName,
                                 'productPrice':
                                     double.tryParse(priceCtrl.text) ?? 0.00,
-                                'category': fetchInformation!.selectedCategory,
-                                'subCategory':
-                                    fetchInformation!.selectedSubCategory,
                               },
                               firestore: firestore,
                               isLoading: isLoading,
@@ -156,10 +120,8 @@ class AddProductPriceScreenState extends State<AddProductPriceScreen> {
                               collectionName: 'productPrice',
                               fieldsToSubmit: [
                                 'productPrice',
-                                'category',
                                 'productName',
                                 'priceType',
-                                'subCategory'
                               ],
                               addTimestamp: false,
                             );

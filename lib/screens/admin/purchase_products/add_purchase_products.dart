@@ -1,11 +1,12 @@
-import '../../../firestore/fetch_information.dart';
+import '../../../components/product_autocomplete.dart';
+import '../../../fetch_information/add_item_list.dart';
+import '../../../fetch_information/fetch_information.dart';
 import '../../../utils/text.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../components/add_edit_title_section.dart';
 import '../../../components/button.dart';
 import '../../../components/input_field.dart';
-import '../../../components/drop_down_button.dart';
 import '../../../firestore/add_information.dart';
 import '../../../utils/slider_bar.dart';
 import 'purchase_products.dart';
@@ -20,11 +21,13 @@ class AddPurchaseProducts extends StatefulWidget {
 class AddPurchaseProductsState extends State<AddPurchaseProducts> {
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
   FetchInformation? fetchInformation;
+
   final quantityCtrl = TextEditingController();
   final pricePerProductCtrl = TextEditingController();
   final productPriceCtrl = TextEditingController();
   final totalPriceCtrl = TextEditingController();
   final discountCtrl = TextEditingController();
+  final productAutocompleteCtrl = TextEditingController();
 
   double totalPrice = 0.0;
   double discount = 0.0;
@@ -32,8 +35,6 @@ class AddPurchaseProductsState extends State<AddPurchaseProducts> {
   double quantity = 1.0;
   double productPrice = 0.0;
 
-  String? selectedSubCategory;
-  String? selectedCategory;
   String? selectedProductName;
 
   List<Map<String, dynamic>> items = [];
@@ -44,11 +45,9 @@ class AddPurchaseProductsState extends State<AddPurchaseProducts> {
   @override
   void initState() {
     super.initState();
-    fetchInformation = FetchInformation(
-      firestore: firestore,
-      setState: setState,
-    );
-    fetchInformation!.fetchCategories().then((_) {});
+    fetchInformation =
+        FetchInformation(firestore: firestore, setState: setState);
+    fetchInformation!.fetchProductName().then((_) {});
   }
 
   @override
@@ -70,79 +69,47 @@ class AddPurchaseProductsState extends State<AddPurchaseProducts> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const AddEditTitleSection(
-                          title: 'Add New Purchase Product Details'),
+                      AddEditTitleSection(
+                        title: 'Add Purchase Product Details',
+                        targetWidget: () => const PurchaseProducts(),
+                      ),
                       const SizedBox(height: 40),
                       Expanded(
                         child: SingleChildScrollView(
                           child: Column(
                             children: [
-                              DropDownButton(
-                                label: 'Category',
-                                items: fetchInformation!.categories,
-                                selectedItem:
-                                    fetchInformation!.selectedCategory,
-                                icon: Icons.category,
-                                onChanged: (newValue) async {
+                              ProductAutocomplete(
+                                fetchInformation: fetchInformation!,
+                                onSelected: (newValue) async {
                                   setState(() {
-                                    fetchInformation!.selectedCategory =
+                                    fetchInformation!.selectedProductName =
                                         newValue;
-                                    fetchInformation!.selectedSubCategory =
-                                        null;
-                                    fetchInformation!.subCategories = [];
+                                    selectedProductName = newValue;
+                                    productAutocompleteCtrl.text = newValue;
                                   });
 
                                   await fetchInformation!
-                                      .fetchSubCategory(newValue!);
-                                },
-                              ),
-                              if (fetchInformation!.selectedCategory != null)
-                                DropDownButton(
-                                  label: 'Sub Category',
-                                  items: fetchInformation!.subCategories,
-                                  selectedItem:
-                                      fetchInformation!.selectedSubCategory,
-                                  icon: Icons.layers,
-                                  onChanged: (newValue) {
-                                    setState(() {
-                                      fetchInformation!.selectedSubCategory =
-                                          newValue;
-                                      fetchInformation!.selectedProductName =
-                                          null;
-                                      fetchInformation!.productName = [];
-                                    });
-                                    fetchInformation!.fetchPurchaseProductName(
-                                      fetchInformation!.selectedCategory!,
-                                      newValue!,
-                                    );
-                                  },
-                                ),
-                              if (fetchInformation!.selectedSubCategory != null)
-                                DropDownButton(
-                                  label: 'Product Name',
-                                  items: fetchInformation!.productName,
-                                  selectedItem:
-                                      fetchInformation!.selectedProductName,
-                                  icon: Icons.label,
-                                  onChanged: (newValue) async {
-                                    setState(() {
-                                      fetchInformation!.selectedProductName =
-                                          newValue;
-                                    });
+                                      .fetchProductPrice(newValue);
 
-                                    await fetchInformation!
-                                        .fetchProductPrice(newValue!);
-
-                                    setState(() {
-                                      pricePerProduct = fetchInformation!
-                                              .priceMap[newValue] ??
+                                  double existingUserPrice = double.tryParse(
+                                          pricePerProductCtrl.text) ??
+                                      0.0;
+                                  double fetchedPrice =
+                                      fetchInformation!.priceMap[newValue] ??
                                           0.0;
-                                      pricePerProductCtrl.text =
-                                          pricePerProduct.toString();
-                                      fetchInformation!.updatePrice();
-                                    });
-                                  },
-                                ),
+
+                                  setState(() {
+                                    pricePerProduct = (existingUserPrice > 0)
+                                        ? existingUserPrice
+                                        : fetchedPrice;
+                                    pricePerProductCtrl.text =
+                                        pricePerProduct.toString();
+                                  });
+                                },
+                                textEditingController: productAutocompleteCtrl,
+                                focusNode: FocusNode(),
+                                onFieldSubmitted: () {},
+                              ),
                               InputField(
                                 controller: quantityCtrl,
                                 label: "Quantity",
@@ -152,6 +119,10 @@ class AddPurchaseProductsState extends State<AddPurchaseProducts> {
                                     quantity = double.tryParse(value) ?? 1.0;
                                     fetchInformation!.quantity = quantity;
                                     fetchInformation!.updatePrice();
+                                    double productPrice =
+                                        quantity * pricePerProduct;
+                                    fetchInformation!.productPriceCtrl.text =
+                                        productPrice.toStringAsFixed(2);
                                   });
                                 },
                               ),
@@ -160,17 +131,20 @@ class AddPurchaseProductsState extends State<AddPurchaseProducts> {
                                 label: "Price Per Product",
                                 icon: Icons.attach_money,
                                 onChanged: (value) {
+                                  double newPricePerProduct =
+                                      double.tryParse(value) ?? 0.0;
+                                  double currentQuantity =
+                                      double.tryParse(quantityCtrl.text) ?? 1.0;
+                                  double productPrice =
+                                      currentQuantity * newPricePerProduct;
+
                                   setState(() {
-                                    pricePerProduct =
-                                        double.tryParse(value) ?? 0.0;
+                                    pricePerProduct = newPricePerProduct;
                                     fetchInformation!.pricePerProduct =
-                                        pricePerProduct;
-                                    fetchInformation!.quantity =
-                                        double.tryParse(quantityCtrl.text) ??
-                                            1.0;
-                                    double productPrice =
-                                        fetchInformation!.quantity *
-                                            fetchInformation!.pricePerProduct;
+                                        newPricePerProduct;
+                                    fetchInformation!.priceMap[
+                                        fetchInformation!.selectedProductName ??
+                                            ''] = newPricePerProduct;
                                     fetchInformation!.productPriceCtrl.text =
                                         productPrice.toStringAsFixed(2);
                                   });
@@ -186,27 +160,37 @@ class AddPurchaseProductsState extends State<AddPurchaseProducts> {
                               const SizedBox(height: 20),
                               CustomButton(
                                 onPressed: () {
-                                  Map<String, dynamic>? newItem =
-                                      fetchInformation!.addItemToList();
-                                  setState(() {
-                                    if (newItem != null) {
+                                  Map<String, dynamic>? newItem = addItemToList(
+                                    context,
+                                    pricePerProductCtrl,
+                                    selectedProductName,
+                                    quantity,
+                                    pricePerProduct,
+                                    quantityCtrl,
+                                    productPriceCtrl,
+                                  );
+                                  if (newItem != null) {
+                                    setState(() {
                                       items.add(newItem);
-                                      totalPrice +=
-                                          newItem['productPrice'] as double;
-
+                                      totalPrice += (newItem['productPrice']
+                                              as double) -
+                                          (double.tryParse(discountCtrl.text) ??
+                                              0.0);
                                       totalPriceCtrl.text =
                                           totalPrice.toStringAsFixed(2);
-                                      selectedCategory = null;
-                                      selectedSubCategory = null;
-                                      selectedProductName = null;
-                                      quantity = 0;
-                                      pricePerProduct = 0;
-                                      productPrice = 0;
-                                      quantityCtrl.clear();
-                                      pricePerProductCtrl.clear();
-                                      productPriceCtrl.clear();
-                                    }
-                                  });
+
+                                      quantity = 1.0;
+                                      fetchInformation!.productPriceCtrl
+                                          .clear();
+                                      productPrice = 0.0;
+                                      fetchInformation!.selectedProductName =
+                                          null;
+                                      quantityCtrl.text = '';
+                                      pricePerProductCtrl.text = '';
+                                      productPriceCtrl.text = '';
+                                      productAutocompleteCtrl.text = '';
+                                    });
+                                  }
                                 },
                                 isLoading: isLoading,
                               ),
@@ -223,7 +207,7 @@ class AddPurchaseProductsState extends State<AddPurchaseProducts> {
                                       style: style(16, color: Colors.black),
                                     ),
                                     subtitle: Text(
-                                      "Category: ${item['category']}\nSub Category:${item['subCategory']}\nPrice: ${item['productPrice'].toStringAsFixed(2)}",
+                                      "Price: ${item['productPrice'].toStringAsFixed(2)}",
                                       style: style(16, color: Colors.black),
                                     ),
                                     trailing: IconButton(
@@ -235,10 +219,17 @@ class AddPurchaseProductsState extends State<AddPurchaseProducts> {
                                               item['productPrice'] as double;
                                           items.removeAt(index);
 
-                                          totalPrice = items.fold(
-                                              0,
-                                              (total, item) =>
-                                                  total + item['productPrice']);
+                                          double totalWithoutDiscount =
+                                              items.fold(
+                                            0,
+                                            (total, item) =>
+                                                total + item['productPrice'],
+                                          );
+
+                                          totalPrice = totalWithoutDiscount -
+                                              (double.tryParse(
+                                                      discountCtrl.text) ??
+                                                  0.0);
 
                                           totalPriceCtrl.text =
                                               totalPrice.toStringAsFixed(2);
@@ -284,15 +275,22 @@ class AddPurchaseProductsState extends State<AddPurchaseProducts> {
                             targetWidget: const PurchaseProducts(),
                             controllers: {
                               'items': items,
-                              'cost': totalPrice,
-                              'discount': discountCtrl,
+                              'cost':
+                                  double.tryParse(totalPriceCtrl.text) ?? 0.0,
+                              'discount':
+                                  double.tryParse(discountCtrl.text) ?? 0.0,
                               'logType': 'Purchase',
                             },
                             firestore: firestore,
                             isLoading: isLoading,
                             setState: setState,
                             collectionName: 'products',
-                            fieldsToSubmit: ['items', 'cost', 'logType'],
+                            fieldsToSubmit: [
+                              'items',
+                              'cost',
+                              'logType',
+                              'discount'
+                            ],
                             addTimestamp: true,
                           );
                         },

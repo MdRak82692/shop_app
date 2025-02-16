@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../components/drop_down_button.dart';
-import '../../../firestore/fetch_information.dart';
 import '../../../utils/slider_bar.dart';
 import '../../../components/add_edit_title_section.dart';
 import '../../../components/button.dart';
@@ -19,18 +17,7 @@ class AddProductListScreen extends StatefulWidget {
 class AddProductListScreenState extends State<AddProductListScreen> {
   final firestore = FirebaseFirestore.instance;
   final productNameCtrl = TextEditingController();
-  FetchInformation? fetchInformation;
   bool isLoading = false;
-
-  @override
-  void initState() {
-    super.initState();
-    fetchInformation = FetchInformation(
-      firestore: firestore,
-      setState: setState,
-    );
-    fetchInformation!.fetchCategories().then((_) {});
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,36 +40,12 @@ class AddProductListScreenState extends State<AddProductListScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const AddEditTitleSection(title: 'Add Product Detail'),
-                        const SizedBox(height: 40),
-                        DropDownButton(
-                          label: 'Category',
-                          items: fetchInformation!.categories,
-                          selectedItem: fetchInformation!.selectedCategory,
-                          icon: Icons.category,
-                          onChanged: (newValue) {
-                            setState(() {
-                              fetchInformation!.selectedCategory = newValue;
-                              fetchInformation!.selectedSubCategory = null;
-                              fetchInformation!.subCategories = [];
-                            });
-
-                            fetchInformation!.fetchSubCategory(newValue!);
-                          },
+                        AddEditTitleSection(
+                          title: 'Add Product Detail',
+                          targetWidget: () =>
+                              const ProductListManagementScreen(),
                         ),
-                        if (fetchInformation!.selectedCategory != null)
-                          DropDownButton(
-                            label: 'Sub-Category',
-                            items: fetchInformation!.subCategories,
-                            selectedItem: fetchInformation!.selectedSubCategory,
-                            icon: Icons.layers,
-                            onChanged: (newValue) {
-                              setState(() {
-                                fetchInformation!.selectedSubCategory =
-                                    newValue;
-                              });
-                            },
-                          ),
+                        const SizedBox(height: 40),
                         InputField(
                             controller: productNameCtrl,
                             label: "Product Name",
@@ -94,10 +57,7 @@ class AddProductListScreenState extends State<AddProductListScreen> {
                               context: context,
                               targetWidget: const ProductListManagementScreen(),
                               controllers: {
-                                'subCategory':
-                                    fetchInformation!.selectedSubCategory,
                                 'productName': productNameCtrl.text,
-                                'category': fetchInformation!.selectedCategory,
                               },
                               firestore: firestore,
                               isLoading: isLoading,
@@ -105,8 +65,6 @@ class AddProductListScreenState extends State<AddProductListScreen> {
                               collectionName: 'productList',
                               fieldsToSubmit: [
                                 'productName',
-                                'category',
-                                'subCategory'
                               ],
                               name: 'productName',
                               option: 'productName',

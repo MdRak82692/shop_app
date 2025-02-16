@@ -65,8 +65,11 @@ class EditStaffSalaryScreenState extends State<EditStaffSalaryScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const AddEditTitleSection(
-                              title: 'Edit Staff Salary Details'),
+                          AddEditTitleSection(
+                            title: 'Edit Staff Salary Details',
+                            targetWidget: () =>
+                                const StaffSalaryManagementScreen(),
+                          ),
                           const SizedBox(height: 30),
                           InputField(
                             controller: staffNameCtrl,

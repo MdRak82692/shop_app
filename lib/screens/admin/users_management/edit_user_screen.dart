@@ -56,7 +56,7 @@ class _EditUserScreenState extends State<EditUserScreen> {
     return Scaffold(
       body: Row(
         children: [
-          const BuildSidebar(selectedIndex: 2),
+          const BuildSidebar(selectedIndex: 1),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(24.0),
@@ -72,7 +72,10 @@ class _EditUserScreenState extends State<EditUserScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const AddEditTitleSection(title: 'Update User'),
+                        AddEditTitleSection(
+                          title: 'Update User',
+                          targetWidget: () => const UserManagementScreen(),
+                        ),
                         const SizedBox(height: 40),
                         InputField(
                           controller: userNameCtrl,

@@ -22,8 +22,6 @@ class EditProductPriceScreen extends StatefulWidget {
 class EditProductPriceScreenState extends State<EditProductPriceScreen> {
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
   final productNameCtrl = TextEditingController();
-  final subCategoryCtrl = TextEditingController();
-  final categoryCtrl = TextEditingController();
   final priceTypeCtrl = TextEditingController();
   final priceCtrl = TextEditingController();
 
@@ -34,8 +32,6 @@ class EditProductPriceScreenState extends State<EditProductPriceScreen> {
     super.initState();
     Map<String, TextEditingController> controllers = {
       'productPrice': priceCtrl,
-      'subCategory': subCategoryCtrl,
-      'category': categoryCtrl,
       'productName': productNameCtrl,
       'priceType': priceTypeCtrl
     };
@@ -48,13 +44,7 @@ class EditProductPriceScreenState extends State<EditProductPriceScreen> {
       isLoading: true,
       setState: setState,
       collectionName: 'productPrice',
-      fieldsToSubmit: [
-        'productPrice',
-        'subCategory',
-        'category',
-        'productName',
-        'priceType'
-      ],
+      fieldsToSubmit: ['productPrice', 'productName', 'priceType'],
     );
   }
 
@@ -79,21 +69,12 @@ class EditProductPriceScreenState extends State<EditProductPriceScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const AddEditTitleSection(
-                            title: 'Update Product Price Detail'),
+                        AddEditTitleSection(
+                          title: 'Update Product Price Detail',
+                          targetWidget: () =>
+                              const ProductPriceManagementScreen(),
+                        ),
                         const SizedBox(height: 40),
-                        InputField(
-                          controller: categoryCtrl,
-                          label: 'Category',
-                          icon: Icons.category,
-                          readOnly: true,
-                        ),
-                        InputField(
-                          controller: subCategoryCtrl,
-                          label: 'Sub Category',
-                          icon: Icons.layers,
-                          readOnly: true,
-                        ),
                         InputField(
                           controller: productNameCtrl,
                           label: 'Product Name',
@@ -123,8 +104,6 @@ class EditProductPriceScreenState extends State<EditProductPriceScreen> {
                                 'productName': productNameCtrl.text,
                                 'productPrice':
                                     double.tryParse(priceCtrl.text) ?? 0.00,
-                                'category': categoryCtrl.text,
-                                'subCategory': subCategoryCtrl.text,
                               },
                               firestore: firestore,
                               isLoading: isLoading,
@@ -132,10 +111,8 @@ class EditProductPriceScreenState extends State<EditProductPriceScreen> {
                               collectionName: 'productPrice',
                               fieldsToSubmit: [
                                 'productPrice',
-                                'category',
                                 'productName',
                                 'priceType',
-                                'subCategory'
                               ],
                               addTimestamp: false,
                             );

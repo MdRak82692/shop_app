@@ -19,8 +19,14 @@ dependencies:
   fl_chart: ^0.70.2
   intl: ^0.20.1
   firebase_core: ^3.10.1
+  pdf: ^3.11.3
+  printing: ^5.14.2
+  path_provider: ^2.1.5
+  file_picker: ^8.3.6
+  firebase_storage: ^12.4.2
+  flutter_barcode_scanner: ^2.0.0
+  web_socket_channel: ^3.0.2
   
-
 dev_dependencies:
   flutter_test:
     sdk: flutter

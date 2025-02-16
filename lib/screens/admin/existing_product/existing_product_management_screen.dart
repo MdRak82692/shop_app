@@ -59,7 +59,6 @@ class ExistingProductManagementScreenState
                             'Product ID': 'id',
                             'Product Name': 'productName',
                           },
-                          groupByFields: const ['category', 'subCategory'],
                           collectionName: 'productList',
                         ),
                       ),

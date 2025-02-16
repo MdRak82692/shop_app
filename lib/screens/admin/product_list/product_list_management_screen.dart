@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../../data_table/multiple_separate_data_table.dart';
+import '../../../data_table/data_table.dart';
 import '../../../components/title_section.dart';
 import '../../../utils/slider_bar.dart';
 import 'edit_product_list_screen.dart';
@@ -69,7 +69,6 @@ class ProductListManagementScreenState
                             return EditProductListScreen(
                                 userId: userId, userData: userData);
                           },
-                          groupByFields: const ['category', 'subCategory'],
                         ),
                       ),
                     ),

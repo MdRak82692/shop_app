@@ -79,12 +79,8 @@ class InventoryLogManagementScreenState
                                 'Quantity',
                               ],
                               itemFieldMapping: const {
-                                'Category': 'category',
-                                'Sub Category': 'subCategory',
                                 'Product Name': 'productName',
                                 'Quantity': 'quantity',
-                                'Price Per Product': 'pricePerProduct',
-                                'Product Price': 'productPrice',
                               },
                               editDelete: false,
                             ),

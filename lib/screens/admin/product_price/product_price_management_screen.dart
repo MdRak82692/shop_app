@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../../data_table/multiple_separate_data_table.dart';
+import '../../../data_table/separate_data_table.dart';
 import '../../../components/title_section.dart';
 import '../../../utils/slider_bar.dart';
 import 'edit_product_price_screen.dart';
@@ -61,19 +61,17 @@ class PProductPriceManagementScreenState
                             'Product Price ID',
                             'Product Name',
                             'Product Price',
-                            'Price Type'
                           ],
                           columnFieldMapping: const {
                             'Product Price ID': 'id',
                             'Product Name': 'productName',
                             'Product Price': 'productPrice',
-                            'Price Type': 'priceType'
                           },
                           targetWidget: (userId, userData) {
                             return EditProductPriceScreen(
                                 userId: userId, userData: userData);
                           },
-                          groupByFields: const ['category', 'subCategory'],
+                          fieldName: 'priceType',
                         ),
                       ),
                     ),

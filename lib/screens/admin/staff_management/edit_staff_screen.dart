@@ -72,8 +72,10 @@ class EditStaffScreenState extends State<EditStaffScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const AddEditTitleSection(
-                              title: 'Update New Staff Information'),
+                          AddEditTitleSection(
+                            title: 'Update New Staff Information',
+                            targetWidget: () => const StaffManagementScreen(),
+                          ),
                           const SizedBox(height: 40),
                           InputField(
                             controller: firstNameCtrl,

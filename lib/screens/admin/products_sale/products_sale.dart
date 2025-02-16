@@ -62,6 +62,7 @@ class ProductsSaleState extends State<ProductsSale> {
                             'Discount',
                             'Total Price',
                             'Time',
+                            'Print',
                           ],
                           columnFieldMapping: const {
                             'items': 'items',
@@ -71,16 +72,12 @@ class ProductsSaleState extends State<ProductsSale> {
                           },
                           fieldName: 'time',
                           itemNames: const [
-                            'Category',
-                            'Sub Category',
                             'Product Name',
                             'Quantity',
                             'Price Per Product',
                             'Product Price',
                           ],
                           itemFieldMapping: const {
-                            'Category': 'category',
-                            'Sub Category': 'subCategory',
                             'Product Name': 'productName',
                             'Quantity': 'quantity',
                             'Price Per Product': 'pricePerProduct',

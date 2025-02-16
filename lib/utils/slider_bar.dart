@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../screens/admin/admin_dashboard.dart';
-import '../screens/admin/category_managment/category_management_screen.dart';
 import '../screens/admin/existing_product/existing_product_management_screen.dart';
 import '../screens/admin/inventory_log/inventory_log_management_screen.dart';
 import '../screens/admin/investment_managment/investment_management_screen.dart';
@@ -14,7 +13,6 @@ import '../screens/admin/sales_analytics/sales_analytics.dart';
 import '../screens/admin/sales_&_finance/sale_finance_screen.dart';
 import '../screens/admin/staff_management/staff_management_screen.dart';
 import '../screens/admin/staff_salary_management/staff_salary_management_screen.dart';
-import '../screens/admin/sub_category/sub_category_management_screen.dart';
 import '../screens/admin/users_management/user_management_screen.dart';
 import '../screens/login_page.dart';
 import '../utils/text.dart';
@@ -108,10 +106,6 @@ class BuildSidebarState extends State<BuildSidebar> {
                       const InvestmentManagementScreen(), 2),
                   buildSidebarTile(context, Icons.money_off, 'Other Cost',
                       const OtherCostManagementScreen(), 3),
-                  buildSidebarTile(context, Icons.category, 'Category',
-                      const CategoryManagementScreen(), 4),
-                  buildSidebarTile(context, Icons.layers, 'Sub-Category',
-                      const SubCategoryManagementScreen(), 5),
                   buildSidebarTile(context, Icons.production_quantity_limits,
                       'Product List', const ProductListManagementScreen(), 6),
                   buildSidebarTile(context, Icons.price_check, 'Product Price',

@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:shop_app/utils/text.dart';
-import '../firestore/sale_fetch_information.dart';
+import '../fetch_information/sale_fetch_information.dart';
 import 'chart_other_part.dart';
 import 'loading_display.dart';
 
@@ -15,7 +15,12 @@ Widget buildBarChart(BuildContext context, String title, String groupBy) {
       } else if (snapshot.hasError) {
         return Center(child: Text('Error: ${snapshot.error}'));
       } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-        return const Center(child: Text('No data available'));
+        return Center(
+          child: Text(
+            'No data available',
+            style: style(18, color: Colors.red),
+          ),
+        );
       } else {
         List<BarChartGroupData> barChartData =
             generateBarChartData(snapshot.data!, groupBy);

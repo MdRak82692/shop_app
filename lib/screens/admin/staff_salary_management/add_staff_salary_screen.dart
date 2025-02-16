@@ -5,7 +5,7 @@ import '../../../components/add_edit_title_section.dart';
 import '../../../components/drop_down_button.dart';
 import '../../../components/input_field.dart';
 import '../../../firestore/add_information.dart';
-import '../../../firestore/fetch_information.dart';
+import '../../../fetch_information/fetch_information.dart';
 import '../../../utils/slider_bar.dart';
 import 'staff_salary_management_screen.dart';
 
@@ -60,8 +60,11 @@ class _AddStaffSalaryScreenState extends State<AddStaffSalaryScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const AddEditTitleSection(
-                            title: 'Add Staff Salary Details'),
+                        AddEditTitleSection(
+                          title: 'Add Staff Salary Details',
+                          targetWidget: () =>
+                              const StaffSalaryManagementScreen(),
+                        ),
                         const SizedBox(height: 40),
                         DropDownButton(
                           label: 'Staff Name',

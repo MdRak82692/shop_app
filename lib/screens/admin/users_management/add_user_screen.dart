@@ -30,7 +30,7 @@ class AddUserScreenState extends State<AddUserScreen> {
     return Scaffold(
       body: Row(
         children: [
-          const BuildSidebar(selectedIndex: 2),
+          const BuildSidebar(selectedIndex: 1),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(24.0),
@@ -46,7 +46,10 @@ class AddUserScreenState extends State<AddUserScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const AddEditTitleSection(title: 'Add New User'),
+                        AddEditTitleSection(
+                          title: 'Add New User',
+                          targetWidget: () => const UserManagementScreen(),
+                        ),
                         const SizedBox(height: 40),
                         InputField(
                           controller: userNameCtrl,

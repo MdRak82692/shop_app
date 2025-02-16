@@ -4,14 +4,14 @@
 #define MyAppName "Shop App"
 #define MyAppVersion "1.5"
 #define MyAppExeName "shop_app.exe"
-#define MyAppAssocName MyAppName + " File"
+#define MyAppAssocName MyAppName + ""
 #define MyAppAssocExt ".myp"
 #define MyAppAssocKey StringChange(MyAppAssocName, " ", "") + MyAppAssocExt
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
-AppId={{699ED997-0526-446B-B0CF-414636034D3B}
+AppId={{6276A929-5830-4AEF-9CA4-558F92DBBD55}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 ;AppVerName={#MyAppName} {#MyAppVersion}
@@ -46,7 +46,10 @@ Source: "F:\APP\shop_app\build\windows\x64\runner\Release\{#MyAppExeName}"; Dest
 Source: "F:\APP\shop_app\build\windows\x64\runner\Release\cloud_firestore_plugin.lib"; DestDir: "{app}"; Flags: ignoreversion
 Source: "F:\APP\shop_app\build\windows\x64\runner\Release\firebase_auth_plugin.lib"; DestDir: "{app}"; Flags: ignoreversion
 Source: "F:\APP\shop_app\build\windows\x64\runner\Release\firebase_core_plugin.lib"; DestDir: "{app}"; Flags: ignoreversion
+Source: "F:\APP\shop_app\build\windows\x64\runner\Release\firebase_storage_plugin.lib"; DestDir: "{app}"; Flags: ignoreversion
 Source: "F:\APP\shop_app\build\windows\x64\runner\Release\flutter_windows.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "F:\APP\shop_app\build\windows\x64\runner\Release\pdfium.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "F:\APP\shop_app\build\windows\x64\runner\Release\printing_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "F:\APP\shop_app\build\windows\x64\runner\Release\shop_app.exp"; DestDir: "{app}"; Flags: ignoreversion
 Source: "F:\APP\shop_app\build\windows\x64\runner\Release\shop_app.lib"; DestDir: "{app}"; Flags: ignoreversion
 Source: "F:\APP\shop_app\build\windows\x64\runner\Release\data\*"; DestDir: "{app}\data"; Flags: ignoreversion recursesubdirs createallsubdirs

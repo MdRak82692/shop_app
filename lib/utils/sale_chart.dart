@@ -66,7 +66,12 @@ Widget buildBarChart(BuildContext context, String title, String collection,
       } else if (snapshot.hasError) {
         return Center(child: Text('Error: ${snapshot.error}'));
       } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-        return const Center(child: Text('No data available'));
+        return Center(
+          child: Text(
+            'No data available',
+            style: style(18, color: Colors.red),
+          ),
+        );
       } else {
         List<BarChartGroupData> barChartData =
             generateBarChartData(snapshot.data!, groupBy);

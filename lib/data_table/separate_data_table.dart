@@ -121,8 +121,8 @@ class DynamicDataTableState extends State<DynamicDataTable> {
                           ),
                         ],
                       ),
-                      child: widget.fieldName == 'category'
-                          ? Text('Category: $date',
+                      child: widget.fieldName == 'priceType'
+                          ? Text('Price Type: $date',
                               style: style(20, color: Colors.blue.shade800))
                           : Text('Date: $date',
                               style: style(20, color: Colors.blue.shade800)),

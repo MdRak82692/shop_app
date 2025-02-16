@@ -84,6 +84,7 @@ class ProductsSaleState extends State<StaffProductsSale> {
                             'Discount',
                             'Total Price',
                             'Time',
+                            'Print',
                           ],
                           columnFieldMapping: const {
                             'items': 'items',

@@ -50,8 +50,10 @@ class AddAdminProfileState extends State<AddAdminProfile> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const AddEditTitleSection(
-                              title: 'Add New Admin Profile'),
+                          AddEditTitleSection(
+                            title: 'Add New Admin Profile',
+                            targetWidget: () => const ProfilePage(),
+                          ),
                           const SizedBox(height: 40),
                           InputField(
                               controller: adminNameCtrl,

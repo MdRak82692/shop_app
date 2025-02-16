@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../components/input_field.dart';
-import '../firestore/login_fetch_information.dart';
+import '../fetch_information/login_fetch_information.dart';
 import '../utils/password_strong.dart';
 import '../utils/loading_display.dart';
 import '../utils/text.dart';

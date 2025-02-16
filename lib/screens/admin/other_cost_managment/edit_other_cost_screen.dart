@@ -67,8 +67,10 @@ class EditOtherCostScreenState extends State<EditOtherCostScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const AddEditTitleSection(
-                            title: 'Update Other Cost Information'),
+                        AddEditTitleSection(
+                          title: 'Update Other Cost Information',
+                          targetWidget: () => const OtherCostManagementScreen(),
+                        ),
                         const SizedBox(height: 40),
                         InputField(
                             controller: nameCtrl,
