@@ -1,24 +1,133 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:shop_app/utils/text.dart';
-import '../fetch_information/sale_fetch_information.dart';
+import 'text.dart';
 import 'chart_other_part.dart';
 import 'loading_display.dart';
 
-Widget buildBarChart(BuildContext context, String title, String groupBy) {
+final FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+Future<List<Map<String, dynamic>>> getChartData(String groupBy,
+    {String? selectedMonth, String? selectedYear}) async {
+  List<Map<String, dynamic>> chartData = [];
+
+  int filterYear =
+      selectedYear != null ? int.parse(selectedYear) : DateTime.now().year;
+  int filterMonth = selectedMonth != null
+      ? months.indexOf(selectedMonth) + 1
+      : DateTime.now().month;
+
+  var orderSnapshot = await firestore.collection("sales").get();
+  var investmentSnapshot = await firestore.collection("investment").get();
+  var otherCostSnapshot = await firestore.collection("otherCost").get();
+  var productSnapshot = await firestore.collection("products").get();
+  var salarySnapshot = await firestore.collection("staffsalary").get();
+
+  void processData(QuerySnapshot snapshot, String timeField, String valueField,
+      bool isNegative) {
+    for (var doc in snapshot.docs) {
+      DateTime time = (doc[timeField] as Timestamp).toDate();
+      double value = (doc[valueField] as num?)?.toDouble() ?? 0.0;
+
+      if (isNegative) value = -value;
+
+      if (value.isNaN || !value.isFinite) {
+        continue;
+      }
+
+      String groupKey = "";
+      bool isValidData = false;
+
+      if (groupBy == 'day' &&
+          time.year == filterYear &&
+          time.month == filterMonth) {
+        groupKey = time.day.toString();
+        isValidData = true;
+      } else if (groupBy == 'month' && time.year == filterYear) {
+        groupKey = getMonthName(time.month);
+        isValidData = true;
+      } else if (groupBy == 'year') {
+        groupKey = time.year.toString();
+        isValidData = true;
+      }
+
+      if (isValidData) {
+        var existingEntry = chartData.firstWhere(
+            (entry) => entry['date'] == groupKey,
+            orElse: () => {'date': groupKey, 'value': 0.0});
+
+        if (existingEntry['value'] == 0.0) {
+          chartData.add({'date': groupKey, 'value': value});
+        } else {
+          existingEntry['value'] += value;
+        }
+      }
+    }
+  }
+
+  processData(investmentSnapshot, "time", "sale", false);
+  processData(orderSnapshot, "time", "sale", false);
+  processData(otherCostSnapshot, "time", "cost", true);
+  processData(productSnapshot, "time", "cost", true);
+  processData(salarySnapshot, "time", "salary", true);
+
+  if (groupBy == 'day') {
+    chartData = chartData
+        .where((entry) =>
+            entry['date'] != null &&
+            int.tryParse(entry['date']) != null &&
+            int.parse(entry['date']) >= 1 &&
+            int.parse(entry['date']) <= 31)
+        .toList();
+  } else if (groupBy == 'month') {
+    chartData = chartData
+        .where(
+            (entry) => entry['date'] != null && months.contains(entry['date']))
+        .toList();
+  } else if (groupBy == 'year') {
+    chartData = chartData
+        .where((entry) =>
+            entry['date'] != null &&
+            int.tryParse(entry['date']) != null &&
+            int.parse(entry['date']) == filterYear)
+        .toList();
+  }
+
+  return chartData.isNotEmpty ? chartData : [];
+}
+
+Widget buildBarChart(BuildContext context, String groupBy,
+    {String? selectedMonth, String? selectedYear}) {
   return FutureBuilder<List<Map<String, dynamic>>>(
-    future: getChartData(groupBy),
+    future: getChartData(groupBy,
+        selectedMonth: selectedMonth, selectedYear: selectedYear),
     builder: (context, snapshot) {
       if (snapshot.connectionState == ConnectionState.waiting) {
         return Center(child: buildLoadingOverlay());
       } else if (snapshot.hasError) {
-        return Center(child: Text('Error: ${snapshot.error}'));
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const SizedBox(height: 20),
+              Text(
+                'Error: ${snapshot.error}',
+                style: style(18, color: Colors.red),
+              ),
+            ],
+          ),
+        );
       } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
         return Center(
-          child: Text(
-            'No data available',
-            style: style(18, color: Colors.red),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const SizedBox(height: 20),
+              Text(
+                'No data available',
+                style: style(18, color: Colors.red),
+              ),
+            ],
           ),
         );
       } else {
@@ -46,22 +155,11 @@ Widget buildBarChart(BuildContext context, String title, String groupBy) {
           yAxisLabels.add(i.toInt().toString());
         }
 
-        String subtitle = "";
-        if (groupBy == 'day') {
-          subtitle = "Current Month: ${getCurrentMonthName()}";
-        } else if (groupBy == 'month') {
-          subtitle = "Year: ${DateTime.now().year}";
-        }
-
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (subtitle.isNotEmpty)
-                Text(subtitle, style: style(22, color: Colors.black)),
-              const SizedBox(height: 20),
-              Text(title, style: style(20, color: Colors.black)),
               const SizedBox(height: 30),
               SizedBox(
                 height: 250,
@@ -134,59 +232,6 @@ Widget buildBarChart(BuildContext context, String title, String groupBy) {
       }
     },
   );
-}
-
-Future<List<Map<String, dynamic>>> getChartData(String groupBy) async {
-  List<Map<String, dynamic>> chartData = [];
-  int currentYear = DateTime.now().year;
-  int currentMonth = DateTime.now().month;
-
-  var orderSnapshot = await firestore.collection("sales").get();
-  var investmentSnapshot = await firestore.collection("investment").get();
-  var otherCostSnapshot = await firestore.collection("otherCost").get();
-  var productSnapshot = await firestore.collection("products").get();
-  var salarySnapshot = await firestore.collection("staffsalary").get();
-
-  Map<String, double> profitMap = {};
-
-  void processData(QuerySnapshot snapshot, String timeField, String valueField,
-      bool isNegative) {
-    for (var doc in snapshot.docs) {
-      DateTime time = doc[timeField].toDate();
-      double value = double.tryParse(doc[valueField].toString()) ?? 0.0;
-      if (isNegative) value = -value;
-
-      String groupKey = "";
-      bool isValid = false;
-
-      if (groupBy == 'day' && time.month == currentMonth) {
-        groupKey = time.day.toString();
-        isValid = true;
-      } else if (groupBy == 'month' && time.year == currentYear) {
-        groupKey = getMonthName(time.month);
-        isValid = true;
-      } else if (groupBy == 'year') {
-        groupKey = time.year.toString();
-        isValid = true;
-      }
-
-      if (isValid) {
-        profitMap[groupKey] = (profitMap[groupKey] ?? 0.0) + value;
-      }
-    }
-  }
-
-  processData(investmentSnapshot, "time", "sale", false);
-  processData(orderSnapshot, "time", "sale", false);
-  processData(otherCostSnapshot, "time", "cost", true);
-  processData(productSnapshot, "time", "cost", true);
-  processData(salarySnapshot, "time", "salary", true);
-
-  profitMap.forEach((key, value) {
-    chartData.add({'date': key, 'value': value});
-  });
-
-  return chartData;
 }
 
 List<BarChartGroupData> generateBarChartData(

@@ -7,13 +7,17 @@ import 'text.dart';
 
 final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
-Future<List<Map<String, dynamic>>> getChartData(String collection,
-    String timeField, String valueField, String groupBy) async {
+Future<List<Map<String, dynamic>>> getChartData(
+    String collection, String timeField, String valueField, String groupBy,
+    {String? selectedMonth, String? selectedYear}) async {
   QuerySnapshot snapshot = await firestore.collection(collection).get();
   List<Map<String, dynamic>> chartData = [];
 
-  int currentYear = DateTime.now().year;
-  int currentMonth = DateTime.now().month;
+  int filterYear =
+      selectedYear != null ? int.parse(selectedYear) : DateTime.now().year;
+  int filterMonth = selectedMonth != null
+      ? months.indexOf(selectedMonth) + 1
+      : DateTime.now().month;
 
   for (var doc in snapshot.docs) {
     DateTime time = (doc[timeField] as Timestamp).toDate();
@@ -26,50 +30,68 @@ Future<List<Map<String, dynamic>>> getChartData(String collection,
     String groupKey = "";
     bool isValidData = false;
 
-    if (groupBy == 'day' && time.month == currentMonth) {
+    if (groupBy == 'day' &&
+        time.year == filterYear &&
+        time.month == filterMonth) {
       groupKey = time.day.toString();
       isValidData = true;
-    } else if (groupBy == 'month' && time.year == currentYear) {
+    } else if (groupBy == 'month' && time.year == filterYear) {
       groupKey = getMonthName(time.month);
       isValidData = true;
     } else if (groupBy == 'year') {
       groupKey = time.year.toString();
       isValidData = true;
-    } else {
-      throw Exception("Invalid grouping unit");
     }
 
     if (isValidData) {
-      bool found = false;
-      for (var entry in chartData) {
-        if (entry['date'] == groupKey) {
-          entry['value'] += value;
-          found = true;
-          break;
-        }
-      }
-      if (!found) {
+      var existingEntry = chartData.firstWhere(
+          (entry) => entry['date'] == groupKey,
+          orElse: () => {'date': groupKey, 'value': 0.0});
+
+      if (existingEntry['value'] == 0.0) {
         chartData.add({'date': groupKey, 'value': value});
+      } else {
+        existingEntry['value'] += value;
       }
     }
   }
+
   return chartData.isNotEmpty ? chartData : [];
 }
 
-Widget buildBarChart(BuildContext context, String title, String collection,
-    String timeField, String valueField, String groupBy) {
+Widget buildBarChart(BuildContext context, String collection, String timeField,
+    String valueField, String groupBy,
+    {String? selectedMonth, String? selectedYear}) {
   return FutureBuilder<List<Map<String, dynamic>>>(
-    future: getChartData(collection, timeField, valueField, groupBy),
+    future: getChartData(collection, timeField, valueField, groupBy,
+        selectedMonth: selectedMonth, selectedYear: selectedYear),
     builder: (context, snapshot) {
       if (snapshot.connectionState == ConnectionState.waiting) {
         return Center(child: buildLoadingOverlay());
       } else if (snapshot.hasError) {
-        return Center(child: Text('Error: ${snapshot.error}'));
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const SizedBox(height: 20),
+              Text(
+                'Error: ${snapshot.error}',
+                style: style(18, color: Colors.red),
+              ),
+            ],
+          ),
+        );
       } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
         return Center(
-          child: Text(
-            'No data available',
-            style: style(18, color: Colors.red),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const SizedBox(height: 20),
+              Text(
+                'No data available',
+                style: style(18, color: Colors.red),
+              ),
+            ],
           ),
         );
       } else {
@@ -87,22 +109,12 @@ Widget buildBarChart(BuildContext context, String title, String collection,
         for (double i = 0; i <= xAxisMax; i += 2000) {
           yAxisLabels.add(i.toInt().toString());
         }
-        String subtitle = "";
-        if (groupBy == 'day') {
-          subtitle = "Current Month: ${getCurrentMonthName()}";
-        } else if (groupBy == 'month') {
-          subtitle = "Year: ${DateTime.now().year}";
-        }
 
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (subtitle.isNotEmpty)
-                Text(subtitle, style: style(22, color: Colors.black)),
-              const SizedBox(height: 10),
-              Text(title, style: style(20, color: Colors.black)),
               const SizedBox(height: 30),
               SizedBox(
                 height: 250,

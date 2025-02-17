@@ -1,11 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../components/sale_title.dart';
+import '../../../utils/chart_other_part.dart';
 import '../../../utils/sale_chart.dart';
-import '../../../utils/search.dart';
 import '../../../utils/slider_bar.dart';
 import '../../../components/title_section.dart';
+import '../../../utils/text.dart';
+import '../../../utils/search.dart';
 
 class SalesAnalytics extends StatefulWidget {
   const SalesAnalytics({super.key});
@@ -19,6 +20,24 @@ class SalesAnalyticsState extends State<SalesAnalytics> {
   final FirebaseAuth auth = FirebaseAuth.instance;
   final TextEditingController searchController = TextEditingController();
   String searchQuery = '';
+
+  String? selectedChartType;
+  String? selectedTrendChart;
+  String? selectedMonth;
+  String? selectedYear;
+
+  final List<String> chartTypes = [
+    'Investment',
+    'Other Cost',
+    'Products Cost',
+    'Products Sale',
+    'Staff Salary'
+  ];
+
+  final List<String> trendCharts = ['Day', 'Month', 'Year'];
+
+  List<String> years = List.generate(
+      21, (index) => (DateTime.now().year - 10 + index).toString());
 
   @override
   Widget build(BuildContext context) {
@@ -41,236 +60,235 @@ class SalesAnalyticsState extends State<SalesAnalytics> {
                 Expanded(
                   child: SingleChildScrollView(
                     scrollDirection: Axis.vertical,
-                    child: Column(
-                      children: [
-                        const SaleTitle(title: 'Investment'),
-                        const SizedBox(height: 20),
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Card(
-                            elevation: 8,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: SizedBox(
-                              height: 1100,
-                              width: 1100,
-                              child: Column(
-                                children: [
-                                  buildBarChart(
-                                    context,
-                                    "Investment Vs Day",
-                                    "investment",
-                                    "time",
-                                    "sale",
-                                    "day",
-                                  ),
-                                  buildBarChart(
-                                    context,
-                                    "Investment Vs Month",
-                                    "investment",
-                                    "time",
-                                    "sale",
-                                    "month",
-                                  ),
-                                  buildBarChart(
-                                    context,
-                                    "Investment vs Year",
-                                    "investment",
-                                    "time",
-                                    "sale",
-                                    "year",
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        const SaleTitle(title: 'Other Cost'),
-                        const SizedBox(height: 20),
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Card(
-                            elevation: 8,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: SizedBox(
-                              height: 1100,
-                              width: 1100,
-                              child: Column(
-                                children: [
-                                  buildBarChart(
-                                    context,
-                                    "Other Cost Vs Day",
-                                    "otherCost",
-                                    "time",
-                                    "cost",
-                                    "day",
-                                  ),
-                                  buildBarChart(
-                                    context,
-                                    "Other Cost Vs Month",
-                                    "otherCost",
-                                    "time",
-                                    "cost",
-                                    "month",
-                                  ),
-                                  buildBarChart(
-                                    context,
-                                    "Other Cost Vs Year",
-                                    "otherCost",
-                                    "time",
-                                    "cost",
-                                    "year",
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        const SaleTitle(title: 'Product Cost'),
-                        const SizedBox(height: 20),
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Card(
-                            elevation: 8,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: SizedBox(
-                              height: 1100,
-                              width: 1100,
-                              child: Column(
-                                children: [
-                                  buildBarChart(
-                                    context,
-                                    "Product Cost vs Day",
-                                    "products",
-                                    "time",
-                                    "cost",
-                                    "day",
-                                  ),
-                                  buildBarChart(
-                                    context,
-                                    "Product Cost vs Month",
-                                    "products",
-                                    "time",
-                                    "cost",
-                                    "month",
-                                  ),
-                                  buildBarChart(
-                                    context,
-                                    "Product Cost vs Year",
-                                    "products",
-                                    "time",
-                                    "cost",
-                                    "year",
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        const SaleTitle(title: 'Products Sale'),
-                        const SizedBox(height: 20),
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Card(
-                            elevation: 8,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: SizedBox(
-                              height: 1100,
-                              width: 1100,
-                              child: Column(
-                                children: [
-                                  buildBarChart(
-                                    context,
-                                    "Product Sales Vs Day",
-                                    "sales",
-                                    "time",
-                                    "sale",
-                                    "day",
-                                  ),
-                                  buildBarChart(
-                                    context,
-                                    "Product Sales Vs Month",
-                                    "sales",
-                                    "time",
-                                    "sale",
-                                    "month",
-                                  ),
-                                  buildBarChart(
-                                    context,
-                                    "Product Sales vs Year",
-                                    "sales",
-                                    "time",
-                                    "sale",
-                                    "year",
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        const SaleTitle(title: 'Staff Salary'),
-                        const SizedBox(height: 20),
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Card(
-                            elevation: 8,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: SizedBox(
-                              height: 1100,
-                              width: 1100,
-                              child: Column(
-                                children: [
-                                  buildBarChart(
-                                    context,
-                                    "Staff Salary Vs Day",
-                                    "staffsalary",
-                                    "time",
-                                    "salary",
-                                    "day",
-                                  ),
-                                  buildBarChart(
-                                    context,
-                                    "Staff Salary Vs Month",
-                                    "staffsalary",
-                                    "time",
-                                    "salary",
-                                    "month",
-                                  ),
-                                  buildBarChart(
-                                    context,
-                                    "Staff Salary vs Year",
-                                    "staffsalary",
-                                    "time",
-                                    "salary",
-                                    "year",
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                      ],
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          buildDropdownSection(),
+                          const SizedBox(height: 20),
+                          if (selectedChartType != null &&
+                              selectedTrendChart != null &&
+                              (selectedTrendChart == 'Year' ||
+                                  (selectedTrendChart == 'Month' &&
+                                      selectedYear != null) ||
+                                  (selectedTrendChart == 'Day' &&
+                                      selectedMonth != null &&
+                                      selectedYear != null)))
+                            buildChartSection(),
+                        ],
+                      ),
                     ),
                   ),
-                )
+                ),
               ],
             ),
-          )
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget buildDropdownSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Select Chart Type',
+          style: style(16, color: Colors.black87),
+        ),
+        const SizedBox(height: 8),
+        DropdownButtonFormField<String>(
+          value: selectedChartType,
+          decoration: InputDecoration(
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            filled: true,
+            fillColor: Colors.grey[200],
+          ),
+          hint: Text("Select Chart Type",
+              style: style(16, color: Colors.black54)),
+          onChanged: (value) {
+            setState(() {
+              selectedChartType = value;
+              selectedTrendChart = null;
+              selectedMonth = null;
+              selectedYear = null;
+            });
+          },
+          items: chartTypes.map((type) {
+            return DropdownMenuItem(
+              value: type,
+              child: Text(type, style: style(16, color: Colors.black87)),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 20),
+        if (selectedChartType != null) ...[
+          Text(
+            'Select Trend Chart',
+            style: style(16, color: Colors.black87),
+          ),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            value: selectedTrendChart,
+            decoration: InputDecoration(
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              filled: true,
+              fillColor: Colors.grey[200],
+            ),
+            hint: Text("Select Trend Chart",
+                style: style(16, color: Colors.black54)),
+            onChanged: (value) {
+              setState(() {
+                selectedTrendChart = value;
+                selectedMonth = null;
+                selectedYear = null;
+              });
+            },
+            items: trendCharts.map((trend) {
+              return DropdownMenuItem(
+                value: trend,
+                child: Text(trend, style: style(16, color: Colors.black87)),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 20),
+          if (selectedTrendChart == 'Month') ...[
+            Text(
+              'Select Year',
+              style: style(16, color: Colors.black87),
+            ),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<String>(
+              value: selectedYear,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                filled: true,
+                fillColor: Colors.grey[200],
+              ),
+              hint:
+                  Text("Select Year", style: style(16, color: Colors.black54)),
+              onChanged: (value) {
+                setState(() {
+                  selectedYear = value;
+                });
+              },
+              items: years.map((year) {
+                return DropdownMenuItem(
+                  value: year,
+                  child: Text(year, style: style(16, color: Colors.black87)),
+                );
+              }).toList(),
+            ),
+          ],
+          if (selectedTrendChart == 'Day') ...[
+            Text(
+              'Select Month',
+              style: style(16, color: Colors.black87),
+            ),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<String>(
+              value: selectedMonth,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                filled: true,
+                fillColor: Colors.grey[200],
+              ),
+              hint:
+                  Text("Select Month", style: style(16, color: Colors.black54)),
+              onChanged: (value) {
+                setState(() {
+                  selectedMonth = value;
+                });
+              },
+              items: months.map((month) {
+                return DropdownMenuItem(
+                  value: month,
+                  child: Text(month, style: style(16, color: Colors.black87)),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 20),
+            if (selectedMonth != null) ...[
+              Text(
+                'Select Year',
+                style: style(16, color: Colors.black87),
+              ),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<String>(
+                value: selectedYear,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  filled: true,
+                  fillColor: Colors.grey[200],
+                ),
+                hint: Text("Select Year",
+                    style: style(16, color: Colors.black54)),
+                onChanged: (value) {
+                  setState(() {
+                    selectedYear = value;
+                  });
+                },
+                items: years.map((year) {
+                  return DropdownMenuItem(
+                    value: year,
+                    child: Text(year, style: style(16, color: Colors.black87)),
+                  );
+                }).toList(),
+              ),
+            ],
+          ],
+        ],
+      ],
+    );
+  }
+
+  Widget buildChartSection() {
+    return Card(
+      elevation: 8,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Text(
+                "$selectedChartType vs $selectedTrendChart",
+                style: style(20, color: Colors.black87),
+              ),
+            ),
+            const SizedBox(height: 20),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: SizedBox(
+                height: 400,
+                width: 1100,
+                child: buildBarChart(
+                  context,
+                  getCollectionName(selectedChartType!),
+                  "time",
+                  getValueFieldName(selectedChartType!),
+                  selectedTrendChart!.toLowerCase(),
+                  selectedMonth: selectedMonth,
+                  selectedYear: selectedYear,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
