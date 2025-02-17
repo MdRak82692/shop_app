@@ -263,7 +263,10 @@ class ProfitState extends State<Profit> {
               scrollDirection: Axis.horizontal,
               child: Text(
                 "$selectedChartType vs $selectedTrendChart",
-                style: style(20, color: Colors.black87),
+                style: style(
+                  20,
+                  color: Colors.black87.withAlpha(180),
+                ),
               ),
             ),
             const SizedBox(height: 20),

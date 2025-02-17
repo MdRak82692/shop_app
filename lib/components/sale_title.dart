@@ -8,7 +8,7 @@ class SaleTitle extends StatelessWidget {
   const SaleTitle({
     super.key,
     required this.title,
-    this.color = Colors.green,
+    this.color = Colors.lightBlue,
   });
 
   @override
@@ -19,42 +19,49 @@ class SaleTitle extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              color.withValues(),
-              color.withValues(),
+              color.withAlpha(90),
+              color.withAlpha(60),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: const [
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
             BoxShadow(
-              color: Colors.black26,
-              blurRadius: 4.0,
-              offset: Offset(0, 2),
+              color: Colors.black.withAlpha(55),
+              blurRadius: 8.0,
+              spreadRadius: 2.0,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 14.0, horizontal: 16.0),
+          padding: const EdgeInsets.all(16.0),
           child: Container(
             padding:
-                const EdgeInsets.symmetric(vertical: 14.0, horizontal: 50.0),
+                const EdgeInsets.symmetric(vertical: 16.0, horizontal: 32.0),
             decoration: BoxDecoration(
-              color: Colors.green.shade50,
-              borderRadius: BorderRadius.circular(8.0),
+              color: Colors.white.withAlpha(230),
+              borderRadius: BorderRadius.circular(12.0),
               border: Border.all(
-                color: Colors.green.shade200,
-                width: 1.0,
+                color: color.withAlpha(76),
               ),
-              boxShadow: const [
+              boxShadow: [
                 BoxShadow(
-                  color: Colors.black26,
-                  blurRadius: 4.0,
-                  offset: Offset(0, 2),
+                  color: Colors.black.withAlpha(26),
+                  blurRadius: 6.0,
+                  offset: const Offset(0, 3),
                 ),
               ],
             ),
-            child: Text(title, style: style(20, color: Colors.green.shade800)),
+            child: Text(
+              title,
+              style: style(
+                24,
+                color: color.withAlpha(230),
+              ),
+              textAlign: TextAlign.center,
+            ),
           ),
         ),
       ),

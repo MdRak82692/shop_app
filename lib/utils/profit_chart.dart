@@ -131,24 +131,29 @@ Widget buildBarChart(BuildContext context, String groupBy,
           ),
         );
       } else {
+        double maxValue = snapshot.data!.isNotEmpty
+            ? snapshot.data!
+                .map((e) => e['value'] as double)
+                .reduce((a, b) => a > b ? a : b)
+            : 0.0;
+
+        double minValue = snapshot.data!.isNotEmpty
+            ? snapshot.data!
+                .map((e) => e['value'] as double)
+                .reduce((a, b) => a < b ? a : b)
+            : 0.0;
+
+        double xAxisMin =
+            minValue < 0 ? (minValue / 2000).floor() * 2000 - 2000 : 0.0;
+
+        double xAxisMax = (maxValue / 2000).ceil() * 2000 + 2000;
+
+        if (xAxisMin >= xAxisMax) {
+          xAxisMin = xAxisMax - 2000;
+        }
+
         List<BarChartGroupData> barChartData =
-            generateBarChartData(snapshot.data!, groupBy);
-
-        double maxValue = barChartData.fold<double>(0, (prev, element) {
-          double currentValue = element.barRods.first.toY;
-          return currentValue > prev ? currentValue : prev;
-        });
-
-        double minValue = barChartData.fold<double>(0, (prev, element) {
-          double currentValue = element.barRods.first.toY;
-          return currentValue < prev ? currentValue : prev;
-        });
-
-        double xAxisMax = (maxValue / 2000).ceil() * 2000;
-        double xAxisMin = (minValue / 2000).floor() * 2000;
-
-        xAxisMin = xAxisMin - 2000;
-        xAxisMax = xAxisMax + 2000;
+            generateBarChartData(snapshot.data!, groupBy, xAxisMax, xAxisMin);
 
         List<String> yAxisLabels = [];
         for (double i = xAxisMin; i <= xAxisMax; i += 2000) {
@@ -175,7 +180,7 @@ Widget buildBarChart(BuildContext context, String groupBy,
                             if (index >= 0 && index < yAxisLabels.length) {
                               return Text(
                                 yAxisLabels[index],
-                                style: style(14, color: Colors.black),
+                                style: style(14, color: Colors.black54),
                               );
                             } else {
                               return Container();
@@ -197,32 +202,50 @@ Widget buildBarChart(BuildContext context, String groupBy,
                             if (groupBy == 'month') {
                               return Text(
                                 getMonthName(value.toInt()),
-                                style: style(14, color: Colors.blue),
+                                style: style(14, color: Colors.blueAccent),
                               );
                             } else if (groupBy == 'year') {
                               return Text(
                                 value.toInt().toString(),
-                                style: style(14, color: Colors.green),
+                                style: style(14, color: Colors.greenAccent),
                               );
                             } else {
                               return Text(
                                 value.toInt().toString(),
-                                style: style(14, color: Colors.red),
+                                style: style(14, color: Colors.redAccent),
                               );
                             }
                           },
                         ),
                       ),
                     ),
-                    borderData: FlBorderData(show: true),
+                    borderData: FlBorderData(
+                      show: true,
+                      border: Border.all(color: Colors.black12, width: 1),
+                    ),
                     barGroups: barChartData,
                     gridData: FlGridData(
                       show: true,
-                      drawHorizontalLine: true,
                       checkToShowHorizontalLine: (value) => value % 2000 == 0,
+                      getDrawingHorizontalLine: (value) => const FlLine(
+                        color: Colors.black12,
+                        strokeWidth: 1,
+                      ),
                     ),
                     maxY: xAxisMax,
                     minY: xAxisMin,
+                    barTouchData: BarTouchData(
+                      enabled: true,
+                      touchTooltipData: BarTouchTooltipData(
+                        tooltipPadding: const EdgeInsets.all(8),
+                        getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                          return BarTooltipItem(
+                            '${rod.toY.toInt()}',
+                            style(12, color: Colors.white),
+                          );
+                        },
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -234,8 +257,8 @@ Widget buildBarChart(BuildContext context, String groupBy,
   );
 }
 
-List<BarChartGroupData> generateBarChartData(
-    List<Map<String, dynamic>> data, String groupBy) {
+List<BarChartGroupData> generateBarChartData(List<Map<String, dynamic>> data,
+    String groupBy, dynamic xAxisMax, dynamic xAxisMin) {
   List<BarChartGroupData> barChartData = [];
   int currentMonth = DateTime.now().month;
   int currentYear = DateTime.now().year;
@@ -255,8 +278,15 @@ List<BarChartGroupData> generateBarChartData(
           x: i,
           barRods: [
             BarChartRodData(
-              toY: value,
-              color: value >= 0 ? Colors.green : Colors.red,
+              toY: value.isFinite ? value : 0.0,
+              borderRadius: BorderRadius.circular(4),
+              width: 16,
+              color: value >= 0 ? Colors.greenAccent : Colors.redAccent,
+              backDrawRodData: BackgroundBarChartRodData(
+                show: true,
+                toY: xAxisMax,
+                color: Colors.grey[200],
+              ),
             ),
           ],
         ),
@@ -276,8 +306,15 @@ List<BarChartGroupData> generateBarChartData(
           x: i,
           barRods: [
             BarChartRodData(
-              toY: value,
-              color: value >= 0 ? Colors.green : Colors.red,
+              toY: value.isFinite ? value : 0.0,
+              borderRadius: BorderRadius.circular(4),
+              width: 16,
+              color: value >= 0 ? Colors.greenAccent : Colors.redAccent,
+              backDrawRodData: BackgroundBarChartRodData(
+                show: true,
+                toY: xAxisMax,
+                color: Colors.grey[200],
+              ),
             ),
           ],
         ),
@@ -297,8 +334,15 @@ List<BarChartGroupData> generateBarChartData(
           x: i,
           barRods: [
             BarChartRodData(
-              toY: value,
-              color: value >= 0 ? Colors.green : Colors.red,
+              toY: value.isFinite ? value : 0.0,
+              borderRadius: BorderRadius.circular(4),
+              width: 16,
+              color: value >= 0 ? Colors.greenAccent : Colors.redAccent,
+              backDrawRodData: BackgroundBarChartRodData(
+                show: true,
+                toY: xAxisMax,
+                color: Colors.grey[200],
+              ),
             ),
           ],
         ),

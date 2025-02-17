@@ -110,19 +110,23 @@ class SalesAnalyticsState extends State<SalesAnalytics> {
           hint: Text("Select Chart Type",
               style: style(16, color: Colors.black54)),
           onChanged: (value) {
-            setState(() {
-              selectedChartType = value;
-              selectedTrendChart = null;
-              selectedMonth = null;
-              selectedYear = null;
-            });
-          },
-          items: chartTypes.map((type) {
-            return DropdownMenuItem(
-              value: type,
-              child: Text(type, style: style(16, color: Colors.black87)),
+            setState(
+              () {
+                selectedChartType = value;
+                selectedTrendChart = null;
+                selectedMonth = null;
+                selectedYear = null;
+              },
             );
-          }).toList(),
+          },
+          items: chartTypes.map(
+            (type) {
+              return DropdownMenuItem(
+                value: type,
+                child: Text(type, style: style(16, color: Colors.black87)),
+              );
+            },
+          ).toList(),
         ),
         const SizedBox(height: 20),
         if (selectedChartType != null) ...[
@@ -143,16 +147,21 @@ class SalesAnalyticsState extends State<SalesAnalytics> {
             hint: Text("Select Trend Chart",
                 style: style(16, color: Colors.black54)),
             onChanged: (value) {
-              setState(() {
-                selectedTrendChart = value;
-                selectedMonth = null;
-                selectedYear = null;
-              });
+              setState(
+                () {
+                  selectedTrendChart = value;
+                  selectedMonth = null;
+                  selectedYear = null;
+                },
+              );
             },
             items: trendCharts.map((trend) {
               return DropdownMenuItem(
                 value: trend,
-                child: Text(trend, style: style(16, color: Colors.black87)),
+                child: Text(
+                  trend,
+                  style: style(16, color: Colors.black87),
+                ),
               );
             }).toList(),
           ),
@@ -267,7 +276,13 @@ class SalesAnalyticsState extends State<SalesAnalytics> {
               scrollDirection: Axis.horizontal,
               child: Text(
                 "$selectedChartType vs $selectedTrendChart",
-                style: style(20, color: Colors.black87),
+                style: style(
+                  20,
+                  color: (selectedChartType == "Investment" ||
+                          selectedChartType == "Sale")
+                      ? Colors.green.withAlpha(180)
+                      : Colors.red.withAlpha(180),
+                ),
               ),
             ),
             const SizedBox(height: 20),
