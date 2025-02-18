@@ -14,7 +14,7 @@ class LoginPage extends StatefulWidget {
   LoginPageState createState() => LoginPageState();
 }
 
-class LoginPageState extends State<LoginPage> {
+class LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   final auth = FirebaseAuth.instance;
   final firestore = FirebaseFirestore.instance;
   final emailCtrl = TextEditingController();
@@ -24,18 +24,59 @@ class LoginPageState extends State<LoginPage> {
   final passwordChecker = PasswordStrengthChecker();
   LoginFetchInformation? fetchInformation;
 
+  late AnimationController textAnimationController;
+  late Animation<Offset> textSlideAnimation;
+
+  late AnimationController colorAnimationController;
+  late Animation<Color?> colorAnimation;
+
   @override
   void initState() {
     super.initState();
-    fetchInformation = LoginFetchInformation(
-      firestore: FirebaseFirestore.instance,
-      setState: setState,
-      isMounted: () => mounted,
-      navigateTo: (widget) {
-        Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (context) => widget));
-      },
+
+    textAnimationController = AnimationController(
+      duration: const Duration(seconds: 10),
+      vsync: this,
     );
+
+    textSlideAnimation = Tween<Offset>(
+      begin: const Offset(-1.0, 0.0),
+      end: const Offset(0.0, 0.0),
+    ).animate(CurvedAnimation(
+      parent: textAnimationController,
+      curve: Curves.easeInOut,
+    ));
+
+    colorAnimationController = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    colorAnimation = ColorTween(
+      begin: Colors.blue.shade800,
+      end: Colors.red.shade800,
+    ).animate(colorAnimationController)
+      ..addListener(() {
+        setState(() {});
+      });
+
+    startTextAnimation();
+  }
+
+  void startTextAnimation() async {
+    while (mounted) {
+      await textAnimationController.forward();
+      await Future.delayed(const Duration(seconds: 10));
+      await textAnimationController.reverse();
+      await Future.delayed(const Duration(seconds: 10));
+    }
+  }
+
+  @override
+  void dispose() {
+    textAnimationController.dispose();
+    colorAnimationController.dispose();
+    super.dispose();
   }
 
   @override
@@ -46,7 +87,10 @@ class LoginPageState extends State<LoginPage> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Colors.blue.shade800, Colors.blue.shade400],
+            colors: [
+              colorAnimation.value ?? Colors.green.shade800,
+              Colors.blue.shade400
+            ],
           ),
         ),
         child: Row(
@@ -110,17 +154,23 @@ class LoginPageState extends State<LoginPage> {
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            "Adventure starts here",
-                            style: style(
-                              32,
-                              color: Colors.white,
+                          SlideTransition(
+                            position: textSlideAnimation,
+                            child: Text(
+                              "Adventure starts here",
+                              style: style(
+                                32,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
                           const SizedBox(height: 16),
-                          Text(
-                            "Create an account to join our community and explore the world of possibilities.",
-                            style: style(18, color: Colors.white70),
+                          SlideTransition(
+                            position: textSlideAnimation,
+                            child: Text(
+                              "Create an account to join our community and explore the world of possibilities.",
+                              style: style(18, color: Colors.white70),
+                            ),
                           ),
                         ],
                       ),
