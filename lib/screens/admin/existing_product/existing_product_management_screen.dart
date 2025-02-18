@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../../data_table/exist_multiple_separate_data_table.dart';
+import '../../../data_table/exist_separate_data_table.dart';
 import '../../../components/title_section.dart';
 import '../../../utils/slider_bar.dart';
 import '../../../utils/search.dart';

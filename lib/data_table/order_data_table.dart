@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../function/delete_functions.dart';
+import '../utils/chart_other_part.dart';
 import '../utils/date_time_format.dart';
 import '../utils/loading_display.dart';
 import '../utils/text.dart';
@@ -360,37 +361,67 @@ class DynamicDataTableState extends State<DynamicDataTable1> {
 
     if (isFirstRow) {
       if (widget.editDelete == true) {
-        cells.add(
-          DataCell(
-            Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.edit, color: Colors.blue),
-                  onPressed: () {
-                    String userId = record['id'];
-                    Map<String, dynamic> userData = record;
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            widget.targetWidget(userId, userData),
-                      ),
-                    );
-                  },
+        if (widget.fieldName == 'time') {
+          DateTime now = DateTime.now();
+          String currentDate =
+              '${now.day} ${getMonthName(now.month)} ${now.year}';
+          var recordDate = record[widget.fieldName];
+          if (recordDate == null) {
+            cells.add(const DataCell(Text('')));
+            return DataRow(cells: cells);
+          }
+          String formattedRecordDate;
+          if (recordDate is Timestamp) {
+            DateTime dateTime = recordDate.toDate();
+            formattedRecordDate =
+                '${dateTime.day} ${getMonthName(dateTime.month)} ${dateTime.year}';
+          } else if (recordDate is String) {
+            DateTime dateTime = DateTime.parse(recordDate);
+            formattedRecordDate =
+                '${dateTime.day} ${getMonthName(dateTime.month)} ${dateTime.year}';
+          } else {
+            cells.add(const DataCell(Text('')));
+            return DataRow(cells: cells);
+          }
+          if (formattedRecordDate == currentDate) {
+            cells.add(
+              DataCell(
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit, color: Colors.blue),
+                      onPressed: () {
+                        String userId = record['id'];
+                        Map<String, dynamic> userData = record;
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                widget.targetWidget(userId, userData),
+                          ),
+                        );
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () {
+                        var userId = record['id'];
+                        if (userId != null) {
+                          deleteFunction(
+                              context, userId, widget.collectionName);
+                        }
+                      },
+                    ),
+                  ],
                 ),
-                IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () {
-                    var userId = record['id'];
-                    if (userId != null) {
-                      deleteFunction(context, userId, widget.collectionName);
-                    }
-                  },
-                ),
-              ],
-            ),
-          ),
-        );
+              ),
+            );
+          } else {
+            cells.add(const DataCell(Text('')));
+          }
+        } else {
+          cells.add(const DataCell(Text('')));
+        }
       } else {
         cells.add(const DataCell(Text('')));
       }

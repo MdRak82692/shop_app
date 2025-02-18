@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../utils/chart_other_part.dart';
 import '../utils/date_time_format.dart';
 import '../function/delete_functions.dart';
 import '../utils/loading_display.dart';
@@ -217,16 +218,123 @@ class DynamicDataTableState extends State<DynamicDataTable> {
 
   DataRow buildDataRow(
       Map<String, dynamic> record, List<Map<String, dynamic>> records) {
-    var checkInTime = record['time'];
-    var checkOutTime = record['outtime'];
-    String totalWorkHours = '';
+    List<DataCell> cells = widget.columnNames.map((col) {
+      var fieldName = widget.columnFieldMapping[col];
+      var value = record[fieldName] ?? '';
 
-    if (checkInTime is Timestamp && checkOutTime is Timestamp) {
-      Duration difference =
-          checkOutTime.toDate().difference(checkInTime.toDate());
-      int hours = difference.inHours;
-      int minutes = difference.inMinutes.remainder(60);
-      totalWorkHours = "${hours}h ${minutes}m";
+      if (col == 'Amount') {
+        value = value.toStringAsFixed(2);
+      }
+
+      if (col == 'Quantity') {
+        value = (double.tryParse(value.toString()) ?? 0.0).toStringAsFixed(2);
+      }
+
+      if (col == 'Product Price') {
+        value = value.toStringAsFixed(2);
+      }
+
+      if (value is Timestamp) {
+        value = formatTimestamp(value);
+      }
+
+      return DataCell(
+        Text(
+          value.toString(),
+          style: style(16, color: Colors.black),
+        ),
+      );
+    }).toList();
+
+    if (widget.fieldName == 'time') {
+      DateTime now = DateTime.now();
+      String currentDate = '${now.day} ${getMonthName(now.month)} ${now.year}';
+      var recordDate = record[widget.fieldName];
+
+      if (recordDate != null) {
+        String formattedRecordDate;
+        if (recordDate is Timestamp) {
+          DateTime dateTime = recordDate.toDate();
+          formattedRecordDate =
+              '${dateTime.day} ${getMonthName(dateTime.month)} ${dateTime.year}';
+        } else if (recordDate is String) {
+          DateTime dateTime = DateTime.parse(recordDate);
+          formattedRecordDate =
+              '${dateTime.day} ${getMonthName(dateTime.month)} ${dateTime.year}';
+        } else {
+          formattedRecordDate = '';
+        }
+
+        if (formattedRecordDate == currentDate) {
+          cells.add(
+            DataCell(
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.edit, color: Colors.blue),
+                    onPressed: () {
+                      String userId = record['id'];
+                      Map<String, dynamic> userData = record;
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              widget.targetWidget(userId, userData),
+                        ),
+                      );
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    onPressed: () {
+                      var userId = record['id'];
+                      if (userId != null) {
+                        deleteFunction(context, userId, widget.collectionName);
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+          );
+        } else {
+          cells.add(const DataCell(Text('')));
+        }
+      } else {
+        cells.add(const DataCell(Text('')));
+      }
+    } else {
+      cells.add(
+        DataCell(
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.edit, color: Colors.blue),
+                onPressed: () {
+                  String userId = record['id'];
+                  Map<String, dynamic> userData = record;
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          widget.targetWidget(userId, userData),
+                    ),
+                  );
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete, color: Colors.red),
+                onPressed: () {
+                  var userId = record['id'];
+                  if (userId != null) {
+                    deleteFunction(context, userId, widget.collectionName);
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
+      );
     }
 
     return DataRow(
@@ -240,70 +348,7 @@ class DynamicDataTableState extends State<DynamicDataTable> {
               : Colors.white;
         },
       ),
-      cells: widget.columnNames.map((col) {
-        var fieldName = widget.columnFieldMapping[col];
-        var value = record[fieldName] ?? '';
-
-        if (col == 'Quantity') {
-          var quantity = record['quantity'] ?? '0';
-          var unit = record['unit'] ?? '';
-          value = '$quantity $unit';
-        }
-
-        if (col == 'Amount') {
-          value = value.toStringAsFixed(2);
-        }
-
-        if (col == 'Quantity') {
-          value = (double.tryParse(value.toString()) ?? 0.0).toStringAsFixed(2);
-        }
-
-        if (col == 'Product Price') {
-          value = value.toStringAsFixed(2);
-        }
-
-        if (col == 'Total Work Hours') {
-          value = totalWorkHours;
-        }
-
-        if (value is Timestamp) {
-          value = formatTimestamp(value);
-        }
-
-        return DataCell(
-            Text(value.toString(), style: style(16, color: Colors.black)));
-      }).toList()
-        ..add(
-          DataCell(
-            Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.edit, color: Colors.blue),
-                  onPressed: () {
-                    String userId = record['id'];
-                    Map<String, dynamic> userData = record;
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            widget.targetWidget(userId, userData),
-                      ),
-                    );
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () {
-                    var userId = record['id'];
-                    if (userId != null) {
-                      deleteFunction(context, userId, widget.collectionName);
-                    }
-                  },
-                ),
-              ],
-            ),
-          ),
-        ),
+      cells: cells,
     );
   }
 }
