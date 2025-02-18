@@ -34,6 +34,16 @@ class LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   void initState() {
     super.initState();
 
+    fetchInformation = LoginFetchInformation(
+      firestore: FirebaseFirestore.instance,
+      setState: setState,
+      isMounted: () => mounted,
+      navigateTo: (widget) {
+        Navigator.pushReplacement(
+            context, MaterialPageRoute(builder: (context) => widget));
+      },
+    );
+
     textAnimationController = AnimationController(
       duration: const Duration(seconds: 10),
       vsync: this,
